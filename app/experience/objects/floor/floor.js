@@ -15,6 +15,7 @@ geom.vertices.forEach((vert) => {
 	const { x, y } = vert;
 	vert.z = noise.simplex3(x * NOISE_SCALE, y * NOISE_SCALE, noiseTime) * FLOOR_MAX_OFFSET;
 });
+geom.normalsNeedUpdate = true;
 console.log(geom);
 
 // const material = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
@@ -26,7 +27,6 @@ console.log(material);
 export const mesh = new THREE.Mesh( geom, material );
 mesh.rotation.x = Math.PI / -2;
 
-
 export const update = (delta) => {
 	noiseTime += NOISE_STEP * delta;
 	// console.log(noiseTime);
@@ -34,5 +34,8 @@ export const update = (delta) => {
 		const { x, y } = vert;
 		vert.z = noise.simplex3(x * NOISE_SCALE, y * NOISE_SCALE, noiseTime) * FLOOR_MAX_OFFSET;
 		geom.verticesNeedUpdate = true;
+		geom.normalsNeedUpdate = true;
 	});
+	geom.computeFaceNormals();
+	geom.computeVertexNormals();
 }
