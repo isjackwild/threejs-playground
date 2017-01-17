@@ -3,6 +3,7 @@ import { NOISE_SCALE, NOISE_STEP, FLOOR_MAX_OFFSET } from '../../constants.js';
 import { Noise } from 'noisejs';
 import FRAGMENT_SHADER from './floor-fragment-shader.js';
 import VERTEX_SHADER from './floor-vertex-shader.js';
+import NOISE_3D from './noise-3d-glsl.js';
 
 
 console.log(FRAGMENT_SHADER, VERTEX_SHADER);
@@ -21,7 +22,7 @@ console.log(geom);
 // const material = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
 const material = new THREE.ShaderMaterial({
 	vertexShader: VERTEX_SHADER,
-	fragmentShader: FRAGMENT_SHADER,
+	fragmentShader: NOISE_3D + FRAGMENT_SHADER,
 });
 console.log(material);
 export const mesh = new THREE.Mesh( geom, material );
