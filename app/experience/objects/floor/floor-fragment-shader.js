@@ -6,22 +6,25 @@ const FRAGMENT_SHADER =
 precision mediump float;
 #endif
 
+#define SHADOW_STRENGTH 0.15
+#define MAX_OFFSET_POSITION ${(FLOOR_MAX_OFFSET * 0.7)}
+
 varying vec3 vNormal;
 varying vec3 vPosition;
-float maxOffsetPosition = ${FLOOR_MAX_OFFSET}.0;
-vec3 colorOne = vec3(34.0 / 255.0, 41.0 / 250.0, 183.0 / 255.0);
-vec3 colorTwo = vec3(50.0 / 255.0, 195.0 / 255.0, 237.0 / 255.0);
+vec3 colorOne = vec3(70.0 / 255.0, 140.0 / 255.0, 200.0 / 255.0);
+vec3 colorTwo = vec3(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0);
 
 float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
 void main() {
-	vec3 light = vec3(0.5, 0.2, 1.0);
+	vec3 light = vec3(0.5, 0.5, 1.0);
 	light = normalize(light);
 
-	float dProd = max(0.0, dot(vNormal, light));
-	float control = (vPosition.z + maxOffsetPosition) / (maxOffsetPosition * 2.0);
+	float dProd = max(0.0, dot(vNormal, light)) * SHADOW_STRENGTH;
+	dProd = 1.0 - dProd;
+	float control = (vPosition.z + MAX_OFFSET_POSITION) / (MAX_OFFSET_POSITION * 2.0);
 	vec3 color = mix(colorOne, colorTwo, control);
 	color *= dProd;
 	

@@ -18,10 +18,10 @@ export const init = () => {
 
 const addEventListeners = () => {
 	if (window.mobile) {
-		window.addEventListener('deviceorientation', _.throttle(onDeviceOrientation, 33));
+		window.addEventListener('deviceorientation', _.throttle(onDeviceOrientation, 16.666));
 		window.addEventListener('touchstart', onClick);
 	} else {
-		window.addEventListener('mousemove', _.throttle(onMouseMove, 33));
+		window.addEventListener('mousemove', _.throttle(onMouseMove, 16.666));
 		window.addEventListener('click', onClick);
 	}
 }
@@ -42,7 +42,6 @@ const onDeviceOrientation = ({ clientX, clientY }) => {
 const onClick = ({ clientX, clientY, touches }) => {
 	let x, y;
 	if (touches) {
-		console.log(touches[0]);
 		x = 2 * (touches[0].clientX / window.innerWidth) - 1;
 		y = 1 - 2 * (touches[0].clientY / window.innerHeight);
 	} else {
@@ -58,6 +57,8 @@ const castFocus = () => {
 	let found = false;
 	intersectableObjects.forEach((obj) => {
 		const intersects = raycaster.intersectObject( obj, false );
+		if (intersects.length) return obj.onIntersect(intersects);
+		return obj.onBlur();
 	});
 }
 
