@@ -14,12 +14,12 @@ export const init = () => {
 
 	scene.add( floor );
 
-	const boxGeometry = new THREE.BoxGeometry( 1, 1, 1 );
-	const boxMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: false } );
-	boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
-	scene.add( boxMesh );
+	// const boxGeometry = new THREE.BoxGeometry( 1, 1, 1 );
+	// const boxMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: false } );
+	// boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
+	// scene.add( boxMesh );
 
-	scene.add( new THREE.AxisHelper(10));
+	// scene.add( new THREE.AxisHelper(10));
 }
 
 export const update = (delta) => {

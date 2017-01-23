@@ -58,7 +58,7 @@ const castFocus = () => {
 	intersectableObjects.forEach((obj) => {
 		const intersects = raycaster.intersectObject( obj, false );
 		if (intersects.length) return obj.onIntersect(intersects);
-		return obj.onBlur();
+		// return obj.onBlur();
 	});
 }
 
