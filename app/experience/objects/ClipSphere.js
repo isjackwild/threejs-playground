@@ -12,7 +12,6 @@ class ClipSphere extends THREE.Mesh {
 		this.position.copy(position);
 		this.scale.multiplyScalar(this.scalar);
 		this.isFocused = false;
-
 		this.setup();
 	}
 
@@ -20,13 +19,14 @@ class ClipSphere extends THREE.Mesh {
 		this.geometry = new THREE.SphereGeometry(BASE_RADIUS, 20, 20);
 		this.material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
 		// this.geometry.computeFaceNormals();
-		// if (this.level < 4) this.addChildren();
+		if (this.level < 4) this.addChildren();
 
 		intersectableObjects.push(this);
 	}
 
 	addChildren() {
 		const childCount = Math.ceil(Math.random() * 3);
+		console.log(childCount);
 
 		for (let i = 0; i < childCount; i++) {
 			// TODO: Distribute using cellular noise
@@ -40,22 +40,22 @@ class ClipSphere extends THREE.Mesh {
 		}
 	}
 
-	onIntersect() {
+	onFocus() {
 		// if (this.isFocused) return;
 		this.isFocused = true;
-		console.log('focus');
-		// this.material.color.setHex(0x0000ff);
+		// console.log('focus');
+		this.material.color.setHex(0x00ff00);
 	}
 
 	onBlur() {
-		if (!this.isFocused) return;
+		// if (!this.isFocused) return;
 		this.isFocused = false;
-		console.log('blur');
-		// this.material.color.setHex(0xff0000);
+		// console.log('blur');
+		this.material.color.setHex(0xff0000);
 	}
 
 	onClick() {
-		console.log('clicked');
+		console.log('clicked', this.level);
 	}
 }
 

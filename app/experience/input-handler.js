@@ -57,13 +57,12 @@ const castFocus = () => {
 	let found = false;
 	intersectableObjects.forEach((obj) => {
 		const intersects = raycaster.intersectObject( obj, false );
-		if (intersects.length) return obj.onIntersect(intersects);
-		// return obj.onBlur();
+		if (intersects.length) return obj.onFocus();
+		return obj.onBlur();
 	});
 }
 
 const castClick = () => {
-	intersectableObjects.forEach((obj) => {
-		const intersects = raycaster.intersectObject( obj, false );
-	});
+	const intersects = raycaster.intersectObjects( intersectableObjects, false );
+	if (intersects.length) intersects[0].object.onClick();
 }
