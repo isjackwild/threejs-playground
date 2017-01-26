@@ -14,11 +14,23 @@ export const init = () => {
 
 	scene.add( new THREE.AxisHelper(10)); // RED = X, GREEN = Y, BLUE = Z; 
 
-	const clipSphere = new ClipSphere({ 
-		level: 0,
-		position: new THREE.Vector3(0, 0, 0),
-	});
-	scene.add(clipSphere);
+	const geometry = new THREE.SphereGeometry(100);
+	const material = new THREE.MeshBasicMaterial( { color: 0xff00ff, wireframe: false } );
+	const mesh = new THREE.Mesh(geometry, material);
+	mesh.onFocus = () => {
+		console.log('focus test');
+	}
+	mesh.onBlur = () => {
+		console.log('blur test');
+	}
+	intersectableObjects.push(mesh);
+	scene.add(mesh);
+
+	// const clipSphere = new ClipSphere({ 
+	// 	level: 0,
+	// 	position: new THREE.Vector3(0, 0, 0),
+	// });
+	// scene.add(clipSphere);
 }
 
 export const update = (delta) => {

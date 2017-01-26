@@ -3,10 +3,10 @@ import _ from 'lodash';
 import PubSub from 'pubsub-js';
 
 import { camera } from './camera.js';
-import { targets } from './scene.js';
 
-const mouseVector = new THREE.Vector3();
+const mouseVector = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
+console.log(raycaster);
 export const ray = raycaster.ray;
 export const intersectableObjects = [];
 const zeroVec = new THREE.Vector2(0, 0);
@@ -27,9 +27,9 @@ const addEventListeners = () => {
 }
 
 const onMouseMove = ({ clientX, clientY }) => {
-	const x = 2 * (clientX / window.innerWidth) - 1;
-	const y = 1 - 2 * (clientY / window.innerHeight);
-	mouseVector.set(x, y, camera.position.z);
+	const x = (clientX / window.innerWidth) * 2 - 1;
+	const y = (clientY / window.innerHeight) * 2 + 1;
+	mouseVector.set(x, y);
 	raycaster.setFromCamera(mouseVector, camera);
 	castFocus();
 }
@@ -43,26 +43,29 @@ const onClick = ({ clientX, clientY, touches }) => {
 	let x, y;
 	if (touches) {
 		console.log(touches[0]);
-		x = 2 * (touches[0].clientX / window.innerWidth) - 1;
-		y = 1 - 2 * (touches[0].clientY / window.innerHeight);
+		x = (touches[0].clientX / window.innerWidth) * 2 - 1;
+		y = (touches[0].clientY / window.innerHeight) * 2 + 1;
 	} else {
-		x = 2 * (clientX / window.innerWidth) - 1;
-		y = 1 - 2 * (clientY / window.innerHeight);
+		x = (clientX / window.innerWidth) * 2 - 1;
+		y = (clientY / window.innerHeight) * 2 + 1;
 	}
-	mouseVector.set(x, y, camera.position.z);
+	mouseVector.set(x, y, 0.5);
 	raycaster.setFromCamera(mouseVector, camera);
 	castClick();
 }
 
 const castFocus = () => {
-	let found = false;
-	intersectableObjects.forEach((obj) => {
+	intersectableObjects.forEach((obj, i) => {
 		const intersects = raycaster.intersectObject( obj, false );
+		// if (i === 0) console.log(intersects);
+		if (intersects.length) return obj.onFocus();
+		obj.onBlur();
 	});
 }
 
 const castClick = () => {
 	intersectableObjects.forEach((obj) => {
 		const intersects = raycaster.intersectObject( obj, false );
+		if (intersects.length) return obj.onClick();
 	});
 }
