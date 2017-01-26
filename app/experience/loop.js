@@ -1,6 +1,6 @@
 const THREE = require('three');
 import { init as initScene, update as updateScene, scene } from './scene.js';
-import { init as initCamera, camera } from './camera.js';
+import { init as initCamera, update as updateCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
 import { init as initInput } from './input-handler.js';
 
@@ -44,6 +44,7 @@ export const onResize = (w, h) => {
 const update = (delta) => {
 	updateScene(delta);
 	updateControls(delta);
+	updateCamera();
 }
 
 const render = () => {

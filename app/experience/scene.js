@@ -12,18 +12,22 @@ export const init = () => {
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 
-	scene.add( new THREE.AxisHelper(10)); // RED = X, GREEN = Y, BLUE = Z; 
+	// scene.add( new THREE.AxisHelper(10)); // RED = X, GREEN = Y, BLUE = Z; 
 
-	const geometry = new THREE.SphereGeometry(100);
-	const material = new THREE.MeshBasicMaterial( { color: 0xff00ff, wireframe: false } );
+	const geometry = new THREE.CubeGeometry(5, 5, 5);
+	const material = new THREE.MeshLambertMaterial( { color: 0xff00ff, wireframe: false } );
 	const mesh = new THREE.Mesh(geometry, material);
 	mesh.onFocus = () => {
-		console.log('focus test');
+		// console.log('focus test');
 	}
 	mesh.onBlur = () => {
-		console.log('blur test');
+		// console.log('blur test');
+	}
+	mesh.onClick = () => {
+		console.log('CLICK test');
 	}
 	intersectableObjects.push(mesh);
+	mesh.position.set(0, 0, -10);
 	scene.add(mesh);
 
 	// const clipSphere = new ClipSphere({ 

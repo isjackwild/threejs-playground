@@ -7,7 +7,7 @@ import { camera } from './camera.js';
 let controls;
 
 export const init = () => {
-	controls = new THREE.TrackballControls(camera);
+	controls = new THREE.OrbitControls(camera);
 	controls.target.set(0, 0, 0);
 	window.addEventListener('deviceorientation', setOrientationControls, true);
 }

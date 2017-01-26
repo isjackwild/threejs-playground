@@ -18,18 +18,19 @@ export const init = () => {
 
 const addEventListeners = () => {
 	if (window.mobile) {
-		window.addEventListener('deviceorientation', _.throttle(onDeviceOrientation, 33));
-		window.addEventListener('touchstart', onClick);
+		window.addEventListener('deviceorientation', _.throttle(onDeviceOrientation, 33), false);
+		window.addEventListener('touchstart', onClick, false);
 	} else {
-		window.addEventListener('mousemove', _.throttle(onMouseMove, 33));
-		window.addEventListener('click', onClick);
+		window.addEventListener('mousemove', _.throttle(onMouseMove, 33), false);
+		window.addEventListener('click', onClick, false);
 	}
 }
 
 const onMouseMove = ({ clientX, clientY }) => {
 	const x = (clientX / window.innerWidth) * 2 - 1;
-	const y = (clientY / window.innerHeight) * 2 + 1;
+	const y = - (clientY / window.innerHeight) * 2 + 1;
 	mouseVector.set(x, y);
+
 	raycaster.setFromCamera(mouseVector, camera);
 	castFocus();
 }
@@ -44,12 +45,13 @@ const onClick = ({ clientX, clientY, touches }) => {
 	if (touches) {
 		console.log(touches[0]);
 		x = (touches[0].clientX / window.innerWidth) * 2 - 1;
-		y = (touches[0].clientY / window.innerHeight) * 2 + 1;
+		y = - (touches[0].clientY / window.innerHeight) * 2 + 1;
 	} else {
 		x = (clientX / window.innerWidth) * 2 - 1;
-		y = (clientY / window.innerHeight) * 2 + 1;
+		y = - (clientY / window.innerHeight) * 2 + 1;
 	}
-	mouseVector.set(x, y, 0.5);
+	mouseVector.set(x, y);
+	console.log(mouseVector, camera);
 	raycaster.setFromCamera(mouseVector, camera);
 	castClick();
 }
@@ -57,7 +59,6 @@ const onClick = ({ clientX, clientY, touches }) => {
 const castFocus = () => {
 	intersectableObjects.forEach((obj, i) => {
 		const intersects = raycaster.intersectObject( obj, false );
-		// if (i === 0) console.log(intersects);
 		if (intersects.length) return obj.onFocus();
 		obj.onBlur();
 	});
