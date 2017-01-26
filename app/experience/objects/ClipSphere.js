@@ -11,14 +11,14 @@ class ClipSphere extends THREE.Mesh {
 		this.scalar = 1 / Math.pow(SCALE_WITH_LEVEL, level);
 		this.position.copy(position);
 		this.scale.multiplyScalar(this.scalar);
-
+		this.isFocused = false;
 
 		this.setup();
 	}
 
 	setup() {
-		this.geometry = new THREE.SphereGeometry(BASE_RADIUS);
-		this.material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: false } );
+		this.geometry = new THREE.SphereGeometry(BASE_RADIUS, 20, 20);
+		this.material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
 		// this.geometry.computeFaceNormals();
 		// if (this.level < 4) this.addChildren();
 
@@ -41,11 +41,15 @@ class ClipSphere extends THREE.Mesh {
 	}
 
 	onFocus() {
+		if (this.isFocused) return;
+		this.isFocused = true;
 		console.log('focus');
 		// this.material.color.setHex(0x0000ff);
 	}
 
 	onBlur() {
+		if (!this.isFocused) return;
+		this.isFocused = false;
 		console.log('blur');
 		// this.material.color.setHex(0xff0000);
 	}
