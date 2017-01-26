@@ -2,6 +2,7 @@ const THREE = require('three');
 import { camera } from './camera.js';
 import { intersectableObjects } from './input-handler.js';
 import { lights } from './lighting.js';
+import ClipSphere from './objects/ClipSphere.js';
 
 export let scene, boxMesh;
 
@@ -11,10 +12,13 @@ export const init = () => {
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 
-	const boxGeometry = new THREE.BoxGeometry( 10, 10, 10 );
-	const boxMaterial = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
-	boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
-	scene.add( boxMesh );
+	scene.add( new THREE.AxisHelper(10)); // RED = X, GREEN = Y, BLUE = Z; 
+
+	const clipSphere = new ClipSphere({ 
+		level: 0,
+		position: new THREE.Vector3(0, 0, 0),
+	});
+	scene.add(clipSphere);
 }
 
 export const update = (delta) => {
