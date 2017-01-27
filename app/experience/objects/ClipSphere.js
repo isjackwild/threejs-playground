@@ -4,6 +4,28 @@ import { SCALE_WITH_LEVEL, BASE_RADIUS, ACTIVE_OPACITY, INACTIVE_OPACITY, FOCUSE
 import { intersectableObjects } from '../input-handler.js';
 import { moveToSphere } from '../controls.js';
 
+const fibonacciSphere = (samples = 1, randomize = false) => {
+	let rand = 1;
+	if (randomize) rand = Math.random() * samples;
+
+	const points = [];
+	const offset = 2 / samples;
+	const increment = Math.PI * (3 - Math.sqrt(5));
+
+	for (let i = 0; i < samples; i++) {
+		const y = ((i * offset) - 1) + offset / 2;
+		const r = Math.sqrt(1 - Math.pow(y, 2));
+		const phi = ((i + rand) % samples) * increment;
+
+		const x = Math.cos(phi) * r;
+		const z = Math.sin(phi) * r;
+
+		points.push({ x, y, z });
+	}
+
+	return points;
+}
+
 class ClipSphere extends THREE.Mesh {
 	constructor(args) {
 		super(args);
@@ -51,12 +73,15 @@ class ClipSphere extends THREE.Mesh {
 	}
 
 	addChildren() {
-		const childCount = Math.ceil(Math.random() * 5) + 2;
+		const childCount = 5;
+		const points = fibonacciSphere(childCount);
 
 		for (let i = 0; i < childCount; i++) {
 			// TODO: Distribute using cellular noise
-			const distFromCenter = BASE_RADIUS * 0.85;
-			const position = new THREE.Vector3(Math.random() * 2 - 1,  Math.random() * 2 - 1,  Math.random() * 2 - 1).normalize().multiplyScalar(distFromCenter);
+			const distFromCenter = BASE_RADIUS * 0.66;
+			// const position = new THREE.Vector3(Math.random() * 2 - 1,  Math.random() * 2 - 1,  Math.random() * 2 - 1).normalize().multiplyScalar(distFromCenter);
+			const { x, y, z } = points[i];
+			const position = new THREE.Vector3(x, y, z).multiplyScalar(distFromCenter);
 			const child = new ClipSphere({ 
 				level: this.level + 1,
 				position,
