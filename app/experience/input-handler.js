@@ -10,6 +10,7 @@ const raycaster = new THREE.Raycaster();
 export const ray = raycaster.ray;
 export const intersectableObjects = [];
 const zeroVec = new THREE.Vector2(0, 0);
+let focusedObject = null;
 
 
 export const init = () => {
@@ -54,12 +55,17 @@ const onClick = ({ clientX, clientY, touches }) => {
 }
 
 const castFocus = () => {
-	let found = false;
-	intersectableObjects.forEach((obj) => {
-		const intersects = raycaster.intersectObject( obj, false );
-		if (intersects.length) return obj.onFocus();
-		return obj.onBlur();
-	});
+	const intersects = raycaster.intersectObjects(intersectableObjects);
+	if (intersects.length) {
+		if (focusedObject != intersects[0].object) {
+			if (focusedObject) focusedObject.onBlur();
+			focusedObject = intersects[0].object;
+			focusedObject.onFocus();
+		}
+	} else {
+		if (focusedObject) focusedObject.onBlur();
+		focusedObject = null;
+	}
 }
 
 const castClick = () => {
