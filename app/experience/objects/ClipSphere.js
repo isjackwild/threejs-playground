@@ -51,11 +51,11 @@ class ClipSphere extends THREE.Mesh {
 	}
 
 	addChildren() {
-		const childCount = Math.ceil(Math.random() * 3) + 1;
+		const childCount = Math.ceil(Math.random() * 5) + 2;
 
 		for (let i = 0; i < childCount; i++) {
 			// TODO: Distribute using cellular noise
-			const distFromCenter = BASE_RADIUS * 0.75;
+			const distFromCenter = BASE_RADIUS * 0.85;
 			const position = new THREE.Vector3(Math.random() * 2 - 1,  Math.random() * 2 - 1,  Math.random() * 2 - 1).normalize().multiplyScalar(distFromCenter);
 			const child = new ClipSphere({ 
 				level: this.level + 1,
@@ -66,7 +66,6 @@ class ClipSphere extends THREE.Mesh {
 	}
 
 	activate() {
-		console.log('ACTIVATE', this.level);
 		this.isEnabled = true;
 		TweenLite.to(
 			this.material,
@@ -94,7 +93,7 @@ class ClipSphere extends THREE.Mesh {
 		if (!this.isEnabled) return;
 		TweenLite.to(
 			this.material,
-			0.3,
+			0.1,
 			{
 				opacity: FOCUSED_OPACITY,
 				ease: Sine.EaseInOut,
@@ -107,7 +106,7 @@ class ClipSphere extends THREE.Mesh {
 		if (!this.isEnabled) return;
 		TweenLite.to(
 			this.material,
-			0.3,
+			0.1,
 			{
 				opacity: ACTIVE_OPACITY,
 				ease: Sine.EaseInOut,

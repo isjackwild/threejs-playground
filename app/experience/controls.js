@@ -47,7 +47,6 @@ export const moveToSphere = (sphere) => {
 	const { x, y, z } = toPosition;
 	
 	controls.enabled = false;
-	controls.target.copy(worldPosition);
 
 	TweenLite.to(
 		camera.position,
@@ -57,7 +56,21 @@ export const moveToSphere = (sphere) => {
 			y,
 			z,
 			ease: Sine.EaseInOut,
-			onComplete: () => { controls.enabled = true },
+		}
+	);
+
+
+	TweenLite.to(
+		controls.target,
+		CAMERA_MOVE_SPEED,
+		{
+			x: worldPosition.x,
+			y: worldPosition.y,
+			z: worldPosition.z,
+			ease: Sine.EaseInOut,
+			onComplete: () => {
+				controls.enabled = true;
+			},
 		}
 	);
 }
