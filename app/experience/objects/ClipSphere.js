@@ -1,30 +1,10 @@
 const THREE = require('three');
 import TweenLite from 'gsap';
-import { SCALE_WITH_LEVEL, BASE_RADIUS, ACTIVE_OPACITY, INACTIVE_OPACITY, FOCUSED_OPACITY, CAMERA_MOVE_SPEED } from '../CONSTANTS.js';
+import { SCALE_WITH_LEVEL, BASE_RADIUS, ACTIVE_OPACITY, INACTIVE_OPACITY, FOCUSED_OPACITY, PARENT_ACTIVE_OPACITY, CAMERA_MOVE_SPEED } from '../CONSTANTS.js';
 import { intersectableObjects } from '../input-handler.js';
 import { moveToSphere } from '../controls.js';
+import { fibonacciSphere } from '../UTIL.js';
 
-const fibonacciSphere = (samples = 1, randomize = false) => {
-	let rand = 1;
-	if (randomize) rand = Math.random() * samples;
-
-	const points = [];
-	const offset = 2 / samples;
-	const increment = Math.PI * (3 - Math.sqrt(5));
-
-	for (let i = 0; i < samples; i++) {
-		const y = ((i * offset) - 1) + offset / 2;
-		const r = Math.sqrt(1 - Math.pow(y, 2));
-		const phi = ((i + rand) % samples) * increment;
-
-		const x = Math.cos(phi) * r;
-		const z = Math.sin(phi) * r;
-
-		points.push({ x, y, z });
-	}
-
-	return points;
-}
 
 class ClipSphere extends THREE.Mesh {
 	constructor(args) {
@@ -34,11 +14,17 @@ class ClipSphere extends THREE.Mesh {
 		this.level = level;
 		// this.scaleFactor = Math.pow(SCALE_WITH_LEVEL, level);
 		this.scalar = 1 / SCALE_WITH_LEVEL;
-		this.position.copy(position);
+		this.restPosition = position;
+		if (this.level < 2) this.position.copy(position);
 		this.scale.multiplyScalar(this.scalar);
 		this.isFocused = false;
-		this.isEnabled = (this.level === 0 ? true : false);
+		this.isActive = (this.level === 0 ? true : false);
+		this.isRotating = (this.level === 0 ? true : false);
 		this.isCameraCurrent = false;
+		this.rotationAxis = new THREE.Vector3(Math.random(), Math.random(), Math.random()).normalize();
+		this.rotationAxisNegated = new THREE.Vector3().copy(this.rotationAxis).multiplyScalar(-1);
+		this.rotationIncrement = ((Math.random() / 2) + 1) / 750;
+		this.update = this.update.bind(this);
 		this.setup();
 	}
 
@@ -59,27 +45,37 @@ class ClipSphere extends THREE.Mesh {
 		// 	}
 		// })();
 		// this.color = color;
+		const opacity = (() => {
+			if (this.level === 0) return ACTIVE_OPACITY;
+			if (this.level === 1) return PARENT_ACTIVE_OPACITY;
+			return INACTIVE_OPACITY;
+		})();
 		this.material = new THREE.MeshLambertMaterial({
 			color: 0xffffff,
-			opacity: (this.level === 0 ? ACTIVE_OPACITY : INACTIVE_OPACITY),
+			opacity,
 			transparent: true,
 			// wireframe: true,
 		});
-		// this.material.side = THREE.DoubleSide;
-		// this.geometry.computeFaceNormals();
-		if (this.level < 4) this.addChildren();
+		if (this.level < 1) this.addChildren();
 
 		intersectableObjects.push(this);
 	}
 
+	update(delta) {
+		if (this.isRotating) {
+			this.rotationAxis.applyAxisAngle(this.rotationAxisNegated, this.rotationIncrement * delta)
+			this.rotateOnAxis(this.rotationAxis, this.rotationIncrement * delta);
+		}
+		this.children.forEach(child => child.update(delta));
+	}
+
 	addChildren() {
-		const childCount = 5;
-		const points = fibonacciSphere(childCount);
+		if (this.level > 3) return;
+		const childCount = 12;
+		const points = fibonacciSphere(childCount, true);
 
 		for (let i = 0; i < childCount; i++) {
-			// TODO: Distribute using cellular noise
 			const distFromCenter = BASE_RADIUS * 0.66;
-			// const position = new THREE.Vector3(Math.random() * 2 - 1,  Math.random() * 2 - 1,  Math.random() * 2 - 1).normalize().multiplyScalar(distFromCenter);
 			const { x, y, z } = points[i];
 			const position = new THREE.Vector3(x, y, z).multiplyScalar(distFromCenter);
 			const child = new ClipSphere({ 
@@ -91,19 +87,22 @@ class ClipSphere extends THREE.Mesh {
 	}
 
 	activate() {
-		this.isEnabled = true;
+		this.isRotating = true;
 		TweenLite.to(
 			this.material,
 			CAMERA_MOVE_SPEED,
 			{
-				opacity: ACTIVE_OPACITY,
+				opacity: this.children.length ? ACTIVE_OPACITY : PARENT_ACTIVE_OPACITY,
 				ease: Sine.EaseInOut,
+				onComplete: () => { this.isActive = true; }
 			}
 		);
+
+		this.children.forEach(child => child.onParentActivated());
 	}
 
 	deactivate() {
-		this.isEnabled = false;
+		this.isActive = false;
 		TweenLite.to(
 			this.material,
 			CAMERA_MOVE_SPEED,
@@ -112,10 +111,53 @@ class ClipSphere extends THREE.Mesh {
 				ease: Sine.EaseInOut,
 			}
 		);
+
+		this.children.forEach(child => child.onParentDeactivated());
+	}
+
+	onParentActivated() {
+		const { x, y, z} = this.restPosition;
+		const delay = CAMERA_MOVE_SPEED * 0.33
+		TweenLite.to(
+			this.position,
+			CAMERA_MOVE_SPEED * 0.9,
+			{ x, y, z, delay, ease: Back.easeOut.config(2) }
+		);
+		TweenLite.to(
+			this.material,
+			CAMERA_MOVE_SPEED,
+			{ opacity: PARENT_ACTIVE_OPACITY, delay, ease: Sine.EaseInOut }
+		);
+	}
+
+	onParentDeactivated() {
+		const { x, y, z} = this.restPosition;
+		const ease = Sine.EaseInOut;
+		TweenLite.to(
+			this.material,
+			CAMERA_MOVE_SPEED,
+			{ opacity: INACTIVE_OPACITY, ease }
+		);
+	}
+
+	onEnter() {
+		this.isRotating = false;
+		if (this.parent instanceof ClipSphere) {
+			this.parent.deactivate();
+			this.parent.children.forEach(child => child.deactivate());
+		} else {
+			this.deactivate();
+		}
+		this.children.forEach((child) => {
+			child.addChildren();
+			requestAnimationFrame(() => {
+				child.activate();
+			});
+		});
 	}
 
 	onFocus() {
-		if (!this.isEnabled) return;
+		if (!this.isActive) return;
 		TweenLite.to(
 			this.material,
 			0.1,
@@ -128,12 +170,12 @@ class ClipSphere extends THREE.Mesh {
 	}
 
 	onBlur() {
-		if (!this.isEnabled) return;
+		if (!this.isActive) return;
 		TweenLite.to(
 			this.material,
 			0.1,
 			{
-				opacity: ACTIVE_OPACITY,
+				opacity: this.children.length ? ACTIVE_OPACITY : PARENT_ACTIVE_OPACITY,
 				ease: Sine.EaseInOut,
 			}
 		);
@@ -141,7 +183,8 @@ class ClipSphere extends THREE.Mesh {
 	}
 
 	onClick() {
-		if (!this.isEnabled) return;
+		if (!this.isActive) return;
+		this.onEnter();
 		moveToSphere(this);
 	}
 }

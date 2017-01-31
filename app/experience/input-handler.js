@@ -57,12 +57,14 @@ const onClick = ({ clientX, clientY, touches }) => {
 const castFocus = () => {
 	const intersects = raycaster.intersectObjects(intersectableObjects);
 	if (intersects.length) {
+		if (intersects[0].object.isActive) document.body.classList.add('pointer'); 
 		if (focusedObject != intersects[0].object) {
 			if (focusedObject) focusedObject.onBlur();
 			focusedObject = intersects[0].object;
 			focusedObject.onFocus();
 		}
 	} else {
+		document.body.classList.remove('pointer');
 		if (focusedObject) focusedObject.onBlur();
 		focusedObject = null;
 	}

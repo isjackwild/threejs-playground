@@ -24,22 +24,14 @@ const setOrientationControls = (e) => {
 }
 
 export const moveToSphere = (sphere) => {
-	const { position, scalar, level, parent, matrixWorld } = sphere;
-	sphere.traverseAncestors(ancestor => ancestor.updateMatrixWorld());
-	// const worldPosition = new THREE.Vector3().setFromMatrixPosition(matrixWorld);
-	const worldPosition = new THREE.Vector3();
-	sphere.localToWorld(worldPosition);
-	
-	currentLevel = 0;
-	if (currentSpehere) {
-		currentSpehere.deactivate();
-		currentSpehere.isCameraCurrent = false;
-		currentSpehere.children.forEach(child => child.deactivate());
-	}
 	currentSpehere = sphere;
-	currentSpehere.isCameraCurrent = true;
-	currentSpehere.deactivate();
-	currentSpehere.children.forEach(child => child.activate());
+	currentLevel = currentSpehere.level;
+	
+	const { position, scalar, level, parent, matrixWorld } = currentSpehere;
+	currentSpehere.traverseAncestors(ancestor => ancestor.updateMatrixWorld());
+	const worldPosition = new THREE.Vector3();
+	currentSpehere.localToWorld(worldPosition);
+
 
 	const dist = new THREE.Vector3().copy(worldPosition).sub(camera.position).length();
 	const dir = new THREE.Vector3().copy(worldPosition).sub(camera.position).normalize().multiplyScalar(scalar);
@@ -58,7 +50,6 @@ export const moveToSphere = (sphere) => {
 			ease: Sine.EaseInOut,
 		}
 	);
-
 
 	TweenLite.to(
 		controls.target,
