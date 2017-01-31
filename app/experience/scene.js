@@ -16,8 +16,12 @@ export const init = () => {
 
 	paths.forEach((path, iP) => {
 		const color = Math.random() * 0xffffff;
+		const pathDirection = new THREE.Vector3(1, 0, 0);
+		const pathStart = new THREE.Vector3().copy(pathDirection).multiplyScalar(ANCHOR_SPREAD);
+		const axis = new THREE.Vector3(0, 1, 0);
 		path.forEach((anchorData, iA) => {
-			const position = new THREE.Vector3((ANCHOR_SPREAD * iA) + ANCHOR_SPREAD + GROUP_RADIUS, 0, 0);
+			const position = new THREE.Vector3((ANCHOR_SPREAD * anchorData.depth) + ANCHOR_SPREAD, 0, 0).applyAxisAngle(axis, Math.random());
+			// const position = new THREE.Vector3().copy(pathDirection).add(pathStart).applyAxisAngle(axis, Math.random() / 10).multiplyScalar(ANCHOR_SPREAD * anchorData.depth);
 			const args = {
 				...anchorData,
 				position,
