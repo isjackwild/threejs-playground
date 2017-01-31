@@ -7,7 +7,7 @@ import { CAMERA_MOVE_SPEED, ACTIVE_OPACITY, INACTIVE_OPACITY } from './constants
 
 let controls;
 let currentLevel = 0;
-let currentSpehere = null;
+let currentAnchor = null;
 
 export const init = () => {
 	controls = new THREE.OrbitControls(camera);
@@ -23,18 +23,16 @@ const setOrientationControls = (e) => {
 	controls.update();
 }
 
-export const moveToSphere = (sphere) => {
-	currentSpehere = sphere;
-	currentLevel = currentSpehere.level;
+export const moveToAnchor = (sphere) => {
+	currentAnchor = sphere;
 	
-	const { position, scalar, level, parent, matrixWorld } = currentSpehere;
-	currentSpehere.traverseAncestors(ancestor => ancestor.updateMatrixWorld());
+	const { position, matrixWorld } = currentAnchor;
+	currentAnchor.traverseAncestors(ancestor => ancestor.updateMatrixWorld());
 	const worldPosition = new THREE.Vector3();
-	currentSpehere.localToWorld(worldPosition);
-
+	currentAnchor.localToWorld(worldPosition);
 
 	const dist = new THREE.Vector3().copy(worldPosition).sub(camera.position).length();
-	const dir = new THREE.Vector3().copy(worldPosition).sub(camera.position).normalize().multiplyScalar(scalar);
+	const dir = new THREE.Vector3().copy(worldPosition).sub(camera.position).normalize();
 	const toPosition = new THREE.Vector3().copy(worldPosition).sub(dir);
 	const { x, y, z } = toPosition;
 	

@@ -1,8 +1,8 @@
-export const CAMERA_DISTANCE = 10000;
-export const BASE_RADIUS = 10000;
-export const SCALE_WITH_LEVEL = 10;
+export const CAMERA_DISTANCE = 500;
+export const GROUP_RADIUS = 100;
+export const ANCHOR_RADIUS = 20;
+export const JUMP_POINT_RADIUS = 10;
+export const ANCHOR_SPREAD = 100;
+export const OPACITY = 0.2;
+export const FOCUS_OPACITY = 0.5;
 export const CAMERA_MOVE_SPEED = 1.5;
-export const ACTIVE_OPACITY = 0;
-export const FOCUSED_OPACITY = 0.22;
-export const PARENT_ACTIVE_OPACITY = 1;
-export const INACTIVE_OPACITY = 0.05;
