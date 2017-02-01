@@ -5,14 +5,30 @@ import { intersectableObjects } from '../input-handler.js';
 import { JUMP_POINT_RADIUS, FOCUS_OPACITY, OPACITY } from '../CONSTANTS.js';
 
 
+const cubicEaseInOut = (k) => {
+	if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k;
+	return 0.5 * ( ( k -= 2 ) * k * k + 2 );
+}
+
+const sineEaseInOut = (k) => {
+	return - 0.5 * ( Math.cos( Math.PI * k ) - 1 );
+}
+
 const createCurvedLine = (start, end) => {
 	const geom = new THREE.Geometry();
 	const dist = start.distanceTo(end);
-	const divisions = Math.ceil(dist / 2);
+	const divisions = Math.ceil(dist / 10);
 
-	for (let i = 0; i < divisions.length; i++) {
-		const control = i / divisions.length;
-		geom.vertices.push(new THREE.Vector3().lerpVectors(start, end, constol));
+	for (let i = 0; i < divisions; i++) {
+		const control = i / divisions;
+		const control1 = cubicEaseInOut(control);
+		const control2 = sineEaseInOut(control);
+		const vec = new THREE.Vector3(
+			end.x * control1,
+			end.y * control2,
+			end.z * control,
+		);
+		geom.vertices.push(vec);
 	}
 
 	return geom;
@@ -47,14 +63,10 @@ class JumpPoint extends THREE.Mesh {
 			linewidth: 5,
 		});
 		const lineEnd = new THREE.Vector3().copy(this.anchor.position);
-		const lineGeom = createCurvedLine(new THREE.Vector3(0, 0, 0), lineEnd);
 		this.parent.updateMatrixWorld();
 		this.updateMatrixWorld();
 		this.worldToLocal(lineEnd);
-		lineGeom.vertices.push(
-			new THREE.Vector3(0, 0, 0),
-			lineEnd,
-		);
+		const lineGeom = createCurvedLine(new THREE.Vector3(0, 0, 0), lineEnd);
 		this.line = new THREE.Line(lineGeom, material);
 		this.add(this.line);
 	}
