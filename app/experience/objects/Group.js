@@ -22,7 +22,7 @@ class Group extends THREE.Mesh {
 			color: 0xffffff,
 			opacity: OPACITY,
 			transparent: true,
-			wireframe: true,
+			// wireframe: true,
 		});
 
 		intersectableObjects.push(this);

@@ -21,7 +21,7 @@ class Anchor extends THREE.Mesh {
 			color: this.color,
 			opacity: 0.6,
 			transparent: true,
-			wireframe: true,
+			// wireframe: true,
 		});
 
 		this.addJumpPoints();

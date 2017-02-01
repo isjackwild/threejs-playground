@@ -1,4 +1,4 @@
-export const CAMERA_DISTANCE = 1000;
+export const CAMERA_DISTANCE = 600;
 export const GROUP_RADIUS = 100;
 export const ANCHOR_RADIUS = 20;
 export const JUMP_POINT_RADIUS = 5;

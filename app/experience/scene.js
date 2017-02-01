@@ -15,7 +15,7 @@ const randomAngle = () => {
 
 export const init = () => {
 	scene = new THREE.Scene();
-	scene.fog = new THREE.FogExp2(0x000000, 0.0001);
+	scene.fog = new THREE.FogExp2(0x000000, 0.001);
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 

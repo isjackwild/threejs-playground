@@ -4,6 +4,20 @@ import { anchorRefs } from '../scene.js';
 import { intersectableObjects } from '../input-handler.js';
 import { JUMP_POINT_RADIUS, FOCUS_OPACITY, OPACITY } from '../CONSTANTS.js';
 
+
+const createCurvedLine = (start, end) => {
+	const geom = new THREE.Geometry();
+	const dist = start.distanceTo(end);
+	const divisions = Math.ceil(dist / 2);
+
+	for (let i = 0; i < divisions.length; i++) {
+		const control = i / divisions.length;
+		geom.vertices.push(new THREE.Vector3().lerpVectors(start, end, constol));
+	}
+
+	return geom;
+}
+
 class JumpPoint extends THREE.Mesh {
 	constructor(args) {
 		super(args);
@@ -28,11 +42,12 @@ class JumpPoint extends THREE.Mesh {
 	}
 
 	addLines() {
-		const material = new THREE.MeshLambertMaterial({
+		const material = new THREE.LineBasicMaterial({
 			color: 0xffffff,
+			linewidth: 5,
 		});
-		const lineGeom = new THREE.Geometry();
 		const lineEnd = new THREE.Vector3().copy(this.anchor.position);
+		const lineGeom = createCurvedLine(new THREE.Vector3(0, 0, 0), lineEnd);
 		this.parent.updateMatrixWorld();
 		this.updateMatrixWorld();
 		this.worldToLocal(lineEnd);
