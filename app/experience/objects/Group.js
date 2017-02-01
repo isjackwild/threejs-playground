@@ -40,6 +40,7 @@ class Group extends THREE.Mesh {
 
 			const jumpPoint = new JumpPoint({ position, anchorId });
 			this.add(jumpPoint);
+			jumpPoint.addLines();
 		});
 	}
 

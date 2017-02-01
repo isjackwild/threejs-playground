@@ -15,6 +15,7 @@ class JumpPoint extends THREE.Mesh {
 	}
 	
 	setup() {
+		this.anchor = anchorRefs[this.anchorId]
 		this.geometry = new THREE.SphereGeometry(JUMP_POINT_RADIUS, 20, 20);
 		this.material = new THREE.MeshLambertMaterial({
 			color: 0xff00ff,
@@ -24,6 +25,23 @@ class JumpPoint extends THREE.Mesh {
 		});
 
 		intersectableObjects.push(this); //TODO only add to intersectable objects when activated
+	}
+
+	addLines() {
+		const material = new THREE.MeshLambertMaterial({
+			color: 0xffffff,
+		});
+		const lineGeom = new THREE.Geometry();
+		const lineEnd = new THREE.Vector3().copy(this.anchor.position);
+		this.parent.updateMatrixWorld();
+		this.updateMatrixWorld();
+		this.worldToLocal(lineEnd);
+		lineGeom.vertices.push(
+			new THREE.Vector3(0, 0, 0),
+			lineEnd,
+		);
+		this.line = new THREE.Line(lineGeom, material);
+		this.add(this.line);
 	}
 
 	activate() {
@@ -61,9 +79,8 @@ class JumpPoint extends THREE.Mesh {
 	onClick() {
 		if (!this.isActive) return;
 		this.isActive = false;
-		const anchor = anchorRefs[this.anchorId]
-		moveToAnchor(anchor);
-		anchor.onEnter();
+		moveToAnchor(this.anchor);
+		this.anchor.onEnter();
 		this.parent.onExit();
 	}
 }

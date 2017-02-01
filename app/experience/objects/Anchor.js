@@ -12,7 +12,7 @@ class Anchor extends THREE.Mesh {
 		this.jumpPoints = jumpPoints;
 		this.position.copy(position);
 		this.color = color;
-		this.setup();
+		// this.setup();
 	}
 	
 	setup() {
@@ -37,6 +37,7 @@ class Anchor extends THREE.Mesh {
 
 			const jumpPoint = new JumpPoint({ position, anchorId });
 			this.add(jumpPoint);
+			jumpPoint.addLines();
 		});
 	}
 
