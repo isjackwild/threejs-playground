@@ -1,4 +1,5 @@
 const THREE = require('three');
+import { Noise } from 'noisejs';
 import { moveToAnchor, moveAlongJumpPath } from '../controls.js';
 import { anchorRefs, scene } from '../scene.js';
 import { intersectableObjects } from '../input-handler.js';
@@ -43,27 +44,37 @@ const createCurvedLine = (start, end, ctx) => {
 	dir.applyAxisAngle(new THREE.Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random()).normalize(), 1);
 	dir.multiplyScalar(dist / 3);
 
-	const divisions = Math.ceil(dist / 10);
+	const divisions = Math.ceil(dist / 5);
 	const points = [];
 
 	const cpOne = new THREE.Vector3().copy(start).add(dir);
 	const cpTwo = new THREE.Vector3().copy(end).sub(dir);
 
-	const helperOne = new THREE.Mesh(new THREE.SphereGeometry(7), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-	const helperTwo = new THREE.Mesh(new THREE.SphereGeometry(7), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
-	helperOne.position.copy(cpOne);
-	helperTwo.position.copy(cpTwo);
-	ctx.add(helperOne);
-	ctx.add(helperTwo);
+	// const helperOne = new THREE.Mesh(new THREE.SphereGeometry(7), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+	// const helperTwo = new THREE.Mesh(new THREE.SphereGeometry(7), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+	// helperOne.position.copy(cpOne);
+	// helperTwo.position.copy(cpTwo);
+	// ctx.add(helperOne);
+	// ctx.add(helperTwo);
 
 	const curve = new THREE.CubicBezierCurve3(start, cpOne, cpTwo, end);
 	const geom = new THREE.Geometry();
 	geom.vertices = curve.getPoints(divisions);
 
+	const noise = new Noise(Math.random());
+	const SCALE = 0.003;
+	geom.vertices.forEach((v) => {
+		const valX = noise.simplex3(v.x * SCALE - 100, v.y * SCALE - 100, v.z * SCALE - 100);
+		const valY = noise.simplex3(v.x * SCALE, v.y * SCALE, v.z * SCALE);
+		const valZ = noise.simplex3(v.x * SCALE + 100, v.y * SCALE + 100, v.z * SCALE + 100);
+		const offset = new THREE.Vector3(valX, valY, valZ).multiplyScalar(22);
+		v.add(offset);
+	});
+
 	return { geom, curve };
 }
 
-class JumpPoint extends THREE.Mesh {
+class JumpPoint extends THREE.Object3D {
 	constructor(args) {
 		super(args);
 		const { anchorId, distFromCenter } = args;
@@ -74,17 +85,26 @@ class JumpPoint extends THREE.Mesh {
 	}
 	
 	setup() {
-		this.position.copy(this.anchor.position).normalize().multiplyScalar(this.distFromCenter);
-		this.geometry = new THREE.SphereGeometry(JUMP_POINT_RADIUS, 20, 20);
-		this.material = new THREE.MeshLambertMaterial({
+		this.addTargets();
+		this.addLines();
+	}
+
+	addTargets() {
+		const geom = new THREE.SphereGeometry(JUMP_POINT_RADIUS, 20, 20);
+		const material = new THREE.MeshLambertMaterial({
 			color: this.anchor.color,
 			opacity: 1,
 			transparent: true,
 			wireframe: true,
 		});
+		this.target = new THREE.Mesh(geom, material);
+		this.target.onClick = this.onClick.bind(this);
+		this.target.onFocus = this.onFocus.bind(this);
+		this.target.onBlur = this.onBlur.bind(this);
+		this.target.position.copy(this.anchor.position).normalize().multiplyScalar(this.distFromCenter);
 
-		intersectableObjects.push(this); //TODO only add to intersectable objects when activated
-		this.addLines();
+		this.add(this.target);
+		intersectableObjects.push(this.target); //TODO only add to intersectable objects when activated
 	}
 
 	addLines() {
