@@ -1,6 +1,6 @@
 const THREE = require('three');
-import { moveToAnchor } from '../controls.js';
-import { anchorRefs } from '../scene.js';
+import { moveToAnchor, moveAlongJumpPath } from '../controls.js';
+import { anchorRefs, scene } from '../scene.js';
 import { intersectableObjects } from '../input-handler.js';
 import { JUMP_POINT_RADIUS, FOCUS_OPACITY, OPACITY } from '../CONSTANTS.js';
 
@@ -36,23 +36,27 @@ const sineEaseInOut = (k) => {
 // }
 
 
-const createCurvedLine = (start, end) => {
-	const dist = start.distanceTo(end);
+const createCurvedLine = (start, end, ctx) => {
+	const dir = new THREE.Vector3().copy(end).sub(start);
+	const dist = dir.length();
+	dir.normalize();
+	dir.applyAxisAngle(new THREE.Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random()).normalize(), 1);
+	dir.multiplyScalar(dist / 3);
+
 	const divisions = Math.ceil(dist / 10);
 	const points = [];
-	console.log(start, end);
 
-	const curve = new THREE.CubicBezierCurve3(
-		new THREE.Vector3().copy(start),
-		new THREE.Vector3(end.x, start.y, 0),
-		new THREE.Vector3(start.x, end.y, 0),
-		new THREE.Vector3().copy(end)
-	);
-	// const curve = new THREE.LineCurve3(
-	// 	new THREE.Vector3().copy(start),
-	// 	new THREE.Vector3().copy(end)
-	// );
+	const cpOne = new THREE.Vector3().copy(start).add(dir);
+	const cpTwo = new THREE.Vector3().copy(end).sub(dir);
 
+	const helperOne = new THREE.Mesh(new THREE.SphereGeometry(7), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+	const helperTwo = new THREE.Mesh(new THREE.SphereGeometry(7), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+	helperOne.position.copy(cpOne);
+	helperTwo.position.copy(cpTwo);
+	ctx.add(helperOne);
+	ctx.add(helperTwo);
+
+	const curve = new THREE.CubicBezierCurve3(start, cpOne, cpTwo, end);
 	const geom = new THREE.Geometry();
 	geom.vertices = curve.getPoints(divisions);
 
@@ -93,7 +97,7 @@ class JumpPoint extends THREE.Mesh {
 		this.updateMatrixWorld();
 		this.worldToLocal(lineEnd);
 
-		const curve = createCurvedLine(new THREE.Vector3(0, 0, 0), lineEnd);
+		const curve = createCurvedLine(new THREE.Vector3(0, 0, 0), lineEnd, this);
 		this.cameraPath = curve.curve;
 		this.line = new THREE.Line(curve.geom, material);
 		this.add(this.line);
@@ -136,7 +140,8 @@ class JumpPoint extends THREE.Mesh {
 	onClick() {
 		if (!this.isActive) return;
 		this.isActive = false;
-		moveToAnchor(this.anchor);
+		// moveToAnchor(this.anchor);
+		moveAlongJumpPath(this);
 		this.anchor.onEnter();
 		this.parent.onExit();
 	}

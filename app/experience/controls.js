@@ -72,6 +72,37 @@ export const moveToAnchor = (sphere) => {
 	);
 }
 
+export const moveAlongJumpPath = (jumpPoint) => {
+	jumpPoint.traverseAncestors(ancestor => ancestor.updateMatrixWorld());
+	const startPos = new THREE.Vector3().copy(jumpPoint.position);
+	jumpPoint.parent.localToWorld(startPos);
+
+	const dist = jumpPoint.cameraPath.getLength();
+	const dur = dist / 100;
+
+	const control = { t: 0 };
+
+	console.log(jumpPoint.line.geometry, jumpPoint.cameraPath.getPoint(0), jumpPoint.cameraPath.getPoint(1));
+
+	const dir = new THREE.Vector3();
+	const setCamera = () => {
+		const pos = jumpPoint.cameraPath.getPoint(control.t).add(startPos);
+		dir.copy(pos).sub(camera.position).normalize().multiplyScalar(0.01);
+		camera.position.copy(pos);
+		controls.target.copy(pos.add(dir));
+	}
+
+	TweenLite.to(
+		control,
+		dur,
+		{
+			t: 1,
+			ease: Cubic.EaseInOut,
+			onUpdate: setCamera,
+		}
+	);
+}
+
 export const update = (delta) => {
 	if (controls) controls.update(delta);
 }
