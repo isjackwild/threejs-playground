@@ -14,24 +14,49 @@ const sineEaseInOut = (k) => {
 	return - 0.5 * ( Math.cos( Math.PI * k ) - 1 );
 }
 
+// const createCurvedLine = (start, end) => {
+// 	const geom = new THREE.Geometry();
+// 	const dist = start.distanceTo(end);
+// 	const divisions = Math.ceil(dist / 10);
+// 	console.log(divisions)
+
+// 	for (let i = 0; i < divisions; i++) {
+// 		const control = i / divisions;
+// 		const control1 = cubicEaseInOut(control);
+// 		const control2 = sineEaseInOut(control);
+// 		const vec = new THREE.Vector3(
+// 			end.x * control1,
+// 			end.y * control1,
+// 			end.z * control,
+// 		);
+// 		geom.vertices.push(vec);
+// 	}
+
+// 	return geom;
+// }
+
+
 const createCurvedLine = (start, end) => {
-	const geom = new THREE.Geometry();
 	const dist = start.distanceTo(end);
 	const divisions = Math.ceil(dist / 10);
+	const points = [];
+	console.log(start, end);
 
-	for (let i = 0; i < divisions; i++) {
-		const control = i / divisions;
-		const control1 = cubicEaseInOut(control);
-		const control2 = sineEaseInOut(control);
-		const vec = new THREE.Vector3(
-			end.x * control1,
-			end.y * control1,
-			end.z * control,
-		);
-		geom.vertices.push(vec);
-	}
+	const curve = new THREE.CubicBezierCurve3(
+		new THREE.Vector3().copy(start),
+		new THREE.Vector3(end.x, start.y, 0),
+		new THREE.Vector3(start.x, end.y, 0),
+		new THREE.Vector3().copy(end)
+	);
+	// const curve = new THREE.LineCurve3(
+	// 	new THREE.Vector3().copy(start),
+	// 	new THREE.Vector3().copy(end)
+	// );
 
-	return geom;
+	const geom = new THREE.Geometry();
+	geom.vertices = curve.getPoints(divisions);
+
+	return { geom, curve };
 }
 
 class JumpPoint extends THREE.Mesh {
@@ -67,8 +92,10 @@ class JumpPoint extends THREE.Mesh {
 		this.parent.updateMatrixWorld();
 		this.updateMatrixWorld();
 		this.worldToLocal(lineEnd);
-		const lineGeom = createCurvedLine(new THREE.Vector3(0, 0, 0), lineEnd);
-		this.line = new THREE.Line(lineGeom, material);
+
+		const curve = createCurvedLine(new THREE.Vector3(0, 0, 0), lineEnd);
+		this.cameraPath = curve.curve;
+		this.line = new THREE.Line(curve.geom, material);
 		this.add(this.line);
 	}
 

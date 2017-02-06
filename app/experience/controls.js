@@ -44,8 +44,16 @@ export const moveToAnchor = (sphere) => {
 		{
 			x,
 			y,
+			ease: Cubic.EaseInOut,
+		}
+	);
+
+	TweenLite.to(
+		camera.position,
+		CAMERA_MOVE_SPEED,
+		{
 			z,
-			ease: Sine.EaseInOut,
+			ease: Power0.easeNone,
 		}
 	);
 

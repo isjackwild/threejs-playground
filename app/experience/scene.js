@@ -57,7 +57,6 @@ export const init = () => {
 			
 			const totalSpread = thisLevelCount - 1 * ANCHOR_ANGLE_SPREAD;
 			const angle = thisLevelCount === 1 ? 0 : ((thisLevelItterator / (thisLevelCount - 1)) * totalSpread) - totalSpread / 2;
-			console.log(totalSpread, angle, thisLevelCount, thisLevelItterator);
 			advance.applyAxisAngle(up, angle);
 			
 			const position = new THREE.Vector3().copy(tmpPrevLevelPosition).add(advance);
