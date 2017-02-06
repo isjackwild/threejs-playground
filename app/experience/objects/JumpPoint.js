@@ -25,7 +25,7 @@ const createCurvedLine = (start, end) => {
 		const control2 = sineEaseInOut(control);
 		const vec = new THREE.Vector3(
 			end.x * control1,
-			end.y * control2,
+			end.y * control1,
 			end.z * control,
 		);
 		geom.vertices.push(vec);
@@ -37,30 +37,31 @@ const createCurvedLine = (start, end) => {
 class JumpPoint extends THREE.Mesh {
 	constructor(args) {
 		super(args);
-		const { position, anchorId } = args;
+		const { anchorId, distFromCenter } = args;
 		this.isActive = false;
+		this.distFromCenter = distFromCenter;
 		this.anchorId = anchorId;
-		this.position.copy(position);
-		this.setup();
+		this.anchor = anchorRefs[this.anchorId];
 	}
 	
 	setup() {
-		this.anchor = anchorRefs[this.anchorId]
+		this.position.copy(this.anchor.position).normalize().multiplyScalar(this.distFromCenter);
 		this.geometry = new THREE.SphereGeometry(JUMP_POINT_RADIUS, 20, 20);
 		this.material = new THREE.MeshLambertMaterial({
-			color: 0xff00ff,
-			opacity: OPACITY,
+			color: this.anchor.color,
+			opacity: 1,
 			transparent: true,
 			wireframe: true,
 		});
 
 		intersectableObjects.push(this); //TODO only add to intersectable objects when activated
+		this.addLines();
 	}
 
 	addLines() {
 		const material = new THREE.LineBasicMaterial({
-			color: 0xffffff,
-			linewidth: 5,
+			color: 0x000000,
+			linewidth: 15,
 		});
 		const lineEnd = new THREE.Vector3().copy(this.anchor.position);
 		this.parent.updateMatrixWorld();
@@ -80,6 +81,7 @@ class JumpPoint extends THREE.Mesh {
 	}
 
 	onFocus() {
+		return;
 		if (!this.isActive) return;
 		TweenLite.to(
 			this.material,
@@ -92,6 +94,7 @@ class JumpPoint extends THREE.Mesh {
 	}
 
 	onBlur() {
+		return;
 		if (!this.isActive) return;
 		TweenLite.to(
 			this.material,

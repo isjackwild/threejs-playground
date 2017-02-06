@@ -19,11 +19,12 @@ class Group extends THREE.Mesh {
 		this.isActive = true;
 		this.geometry = new THREE.SphereGeometry(GROUP_RADIUS, 20, 20);
 		this.material = new THREE.MeshLambertMaterial({
-			color: 0xffffff,
-			opacity: OPACITY,
+			color: 0x000000,
+			opacity: 1,
 			transparent: true,
-			// wireframe: true,
+			wireframe: true,
 		});
+		this.material.side = THREE.DoubleSide;
 
 		intersectableObjects.push(this);
 		this.addJumpPoints();
@@ -36,11 +37,11 @@ class Group extends THREE.Mesh {
 
 			const distFromCenter = GROUP_RADIUS * 0.7;
 			const { x, y, z } = points[i];
-			const position = new THREE.Vector3(x, y, z).multiplyScalar(distFromCenter);
+			// const position = new THREE.Vector3(x, y, z).multiplyScalar(distFromCenter);
 
-			const jumpPoint = new JumpPoint({ position, anchorId });
+			const jumpPoint = new JumpPoint({ anchorId, distFromCenter });
 			this.add(jumpPoint);
-			jumpPoint.addLines();
+			jumpPoint.setup();
 		});
 	}
 
@@ -54,6 +55,7 @@ class Group extends THREE.Mesh {
 	}
 
 	onFocus() {
+		return;
 		if (!this.isActive) return;
 		TweenLite.to(
 			this.material,
@@ -66,6 +68,7 @@ class Group extends THREE.Mesh {
 	}
 
 	onBlur() {
+		return;
 		if (!this.isActive) return;
 		TweenLite.to(
 			this.material,

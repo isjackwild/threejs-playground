@@ -1,3 +1,5 @@
+const THREE = require('three');
+
 export const fibonacciSphere = (samples = 1, randomize = false) => {
 	let rand = 1;
 	if (randomize) rand = Math.random() * samples;
@@ -18,4 +20,47 @@ export const fibonacciSphere = (samples = 1, randomize = false) => {
 	}
 
 	return points;
+}
+
+
+// export const toXYCoords = (obj, camera) => {
+// 	console.log(obj);
+// 	// camera.updateMatrixWorld();
+// 	// const vector = projector.projectVector(pos.clone(), camera);
+// 	// vector.x = (vector.x + 1)/2 * window.innerWidth;
+// 	// vector.y = -(vector.y - 1)/2 * window.innerHeight;
+// 	// return vector;
+
+	
+// 	const vector = new THREE.Vector3();
+// 	const widthHalf = window.innerWidth * 0.5;
+// 	const heightHalf = window.innerHeight * 0.5;
+
+// 	camera.updateMatrixWorld();
+// 	obj.updateMatrixWorld();
+
+// 	vector.setFromMatrixPosition(obj.matrixWorld);
+// 	vector.project(camera);
+
+// 	vector.x = (vector.x * widthHalf) + widthHalf;
+// 	vector.x = - (vector.y * heightHalf) + heightHalf;
+
+// 	return vector;
+// }
+
+
+
+
+export const toXYCoords = (obj, camera) => {
+	// camera.updateMatrixWorld();
+	// obj.updateMatrixWorld();
+
+	const { x, y, z } = obj.position;
+	const vector = new THREE.Vector3(x, y, z);
+	const projected = vector.project(camera);
+
+	vector.x = (vector.x + 1) / 2 * window.innerWidth;
+	vector.y = - (vector.y - 1) / 2 * window.innerHeight;
+
+	return vector;
 }

@@ -5,7 +5,7 @@ export let camera;
 
 export const init = () => {
 	camera = new THREE.PerspectiveCamera(80, window.app.width / window.app.height, 0.001, 1000000);
-	const cameraPosVec = new THREE.Vector3(-3, 5, 8).normalize().multiplyScalar(CAMERA_DISTANCE);
+	const cameraPosVec = new THREE.Vector3(0, 1, 0).normalize().multiplyScalar(CAMERA_DISTANCE);
 	camera.position.copy(cameraPosVec);
 	camera.lookAt(new THREE.Vector3(0, 0, 0));
 }
