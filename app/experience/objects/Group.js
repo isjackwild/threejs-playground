@@ -23,6 +23,7 @@ class Group extends THREE.Mesh {
 			opacity: 1,
 			transparent: true,
 			wireframe: true,
+			visible: false,
 		});
 		this.material.side = THREE.DoubleSide;
 
@@ -33,7 +34,7 @@ class Group extends THREE.Mesh {
 	addJumpPoints() {
 		const points = fibonacciSphere(this.paths.length, true);
 		this.paths.forEach((path, i) => {
-			const anchorId = path[0].id;
+			const anchorId = path.paths[0].id;
 
 			const distFromCenter = GROUP_RADIUS * 0.7;
 			const { x, y, z } = points[i];

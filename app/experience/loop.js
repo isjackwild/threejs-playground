@@ -1,8 +1,9 @@
 const THREE = require('three');
-import { init as initScene, update as updateScene, scene } from './scene.js';
+import { init as initScene, update as updateScene, scene, gui } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
 import { init as initInput } from './input-handler.js';
+import { init as initLights } from './lighting.js';
 
 let canvas;
 let raf, then, now, delta;
@@ -13,6 +14,7 @@ export const init = () => {
 	canvas = document.getElementsByClassName('canvas')[0];
 	setupRenderer();
 	initCamera();
+	initLights();
 	initControls();
 	initScene();
 	initInput();

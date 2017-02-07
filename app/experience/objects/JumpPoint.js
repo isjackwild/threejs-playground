@@ -74,6 +74,32 @@ const createCurvedLine = (start, end, ctx) => {
 	return { geom, curve };
 }
 
+
+const VERTEX_SHADER = `
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const NOISE_FRAGMENT_SHADER = `
+	uniform vec3 color;
+	uniform float opacity;
+	varying vec2 vUv;
+
+	void main() {
+		float strength = 6.0;
+
+    	float x = (vUv.x + 4.0) * (vUv.y + 4.0) * 10.0;
+		vec4 grain = vec4(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * strength;
+
+		gl_FragColor = vec4(color + grain.xyz, opacity);
+	}`;
+
+
+
 class JumpPoint extends THREE.Object3D {
 	constructor(args) {
 		super(args);
@@ -91,12 +117,33 @@ class JumpPoint extends THREE.Object3D {
 
 	addTargets() {
 		const geom = new THREE.SphereGeometry(JUMP_POINT_RADIUS, 20, 20);
-		const material = new THREE.MeshLambertMaterial({
-			color: this.anchor.color,
-			opacity: 1,
-			transparent: true,
-			wireframe: true,
+		// const material = new THREE.MeshLambertMaterial({
+		// 	color: this.anchor.color,
+		// 	opacity: 0.8,
+		// 	transparent: true,
+		// 	// wireframe: true,
+		// });
+
+		const material = new THREE.ShaderMaterial({
+			uniforms: {
+				color: {
+					type: "c",
+					value: new THREE.Color(this.anchor.colors.jump)
+				},
+				opacity: {
+					type: "f",
+					value: 0.8
+				}
+			},
+			vertexShader: VERTEX_SHADER,
+			fragmentShader: NOISE_FRAGMENT_SHADER,
+			// depthTest: false,
+			// depthWrite: false,
+			side: THREE.DoubleSide,
+			transparent: true
 		});
+
+
 		this.target = new THREE.Mesh(geom, material);
 		this.target.onClick = this.onClick.bind(this);
 		this.target.onFocus = this.onFocus.bind(this);
@@ -109,7 +156,7 @@ class JumpPoint extends THREE.Object3D {
 
 	addLines() {
 		const material = new THREE.LineBasicMaterial({
-			color: 0x000000,
+			color: new THREE.Color(this.anchor.colors.line),
 			linewidth: 15,
 		});
 		const lineEnd = new THREE.Vector3().copy(this.anchor.position);

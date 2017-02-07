@@ -44,7 +44,7 @@ export const moveToAnchor = (sphere) => {
 		{
 			x,
 			y,
-			ease: Cubic.EaseInOut,
+			ease: Expo.EaseInOut,
 		}
 	);
 
@@ -53,7 +53,7 @@ export const moveToAnchor = (sphere) => {
 		CAMERA_MOVE_SPEED,
 		{
 			z,
-			ease: Power0.easeNone,
+			ease: Expo.easeNone,
 		}
 	);
 
@@ -78,11 +78,9 @@ export const moveAlongJumpPath = (jumpPoint) => {
 	jumpPoint.parent.localToWorld(startPos);
 
 	const dist = jumpPoint.cameraPath.getLength();
-	const dur = dist / 100;
+	const dur = dist / 150;
 
 	const control = { t: 0 };
-
-	console.log(jumpPoint.line.geometry, jumpPoint.cameraPath.getPoint(0), jumpPoint.cameraPath.getPoint(1));
 
 	const dir = new THREE.Vector3();
 	const setCamera = () => {
@@ -97,7 +95,7 @@ export const moveAlongJumpPath = (jumpPoint) => {
 		dur,
 		{
 			t: 1,
-			ease: Cubic.EaseInOut,
+			ease: Expo.EaseInOut,
 			onUpdate: setCamera,
 		}
 	);

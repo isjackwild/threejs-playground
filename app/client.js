@@ -1,5 +1,6 @@
 import MobileDetect from 'mobile-detect';
 import { init as initLoop, renderer, onResize as onResizeRenderer } from './experience/loop.js';
+import { init as initGUI } from './experience/GUI.js';
 import { onResize as onResizeCamera } from './experience/camera.js';
 import _ from 'lodash';
 
@@ -14,6 +15,7 @@ const kickIt = () => {
 	addEventListeners();
 	onResize();
 	initLoop();
+	initGUI();
 }
 
 const onResize = () => {
