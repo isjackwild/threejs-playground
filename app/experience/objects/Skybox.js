@@ -25,23 +25,6 @@ const NOISE_FRAGMENT_SHADER = `
 	}`;
 
 
-const FRAGMENT_SHADER = `
-  uniform vec3 color;
-  uniform float opacity;
-
-  varying vec2 vUv;
-
-  void main() {
-    float strength = 5.0;
-
-    float x = (vUv.x + 4.0) * (vUv.y + 4.0) * 10.0;
-
-    float depth = gl_FragCoord.z / gl_FragCoord.w;
-    float fade = smoothstep(0.1, 50.0, depth);
-
-    gl_FragColor = vec4(color, vUv.x * fade * opacity);
-  }`;
-
 
 
 class Skybox extends THREE.Mesh {

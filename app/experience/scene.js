@@ -6,10 +6,11 @@ import { intersectableObjects } from './input-handler.js';
 // import Group from './objects/Group.js';
 import Anchor from './objects/Anchor.js';
 import CameraPath from './objects/CameraPath';
-// import Skybox from './objects/Skybox.js';
+import Skybox from './objects/Skybox.js';
 import { ANCHOR_SPREAD, ANCHOR_ANGLE_SPREAD, GROUP_RADIUS } from './constants.js';
 import { structure } from './data/CONTENT_STRUCTURE';
 import { lights } from './lighting.js';
+import { controls } from './controls.js';
 
 export let scene, boxMesh, skybox, sceneRadius, directionalLightHelper, anchorRefs = {};
 // const directionalLightTarget = new THREE.Vector3();
@@ -37,7 +38,9 @@ export const init = () => {
 		anchorRefs[key].setup();
 	}
 
-	skybox = new Skybox();
+	const sceneRadius = new THREE.Box3().setFromObject(scene).getBoundingSphere().radius;
+	skybox = new Skybox({ radius: sceneRadius * 1.33 });
+	scene.add(skybox);
 }
 
 const addAnchors = () => {
@@ -85,6 +88,12 @@ const addAnchors = () => {
 		anchorRefs[anchorData.id] = anchor;
 		intersectableObjects.push(anchor);
 		scene.add(anchor);
+
+		if (iA === 0) { 
+			camera.position.copy(position);
+			controls.target.copy(position).add(pathDirection);
+			console.log(camera.position, position);
+		}
 	});
 }
 

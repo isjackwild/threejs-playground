@@ -5,7 +5,7 @@ require('../vendor/DeviceOrientationControls.js');
 import { camera } from './camera.js';
 import { CAMERA_MOVE_SPEED, ACTIVE_OPACITY, INACTIVE_OPACITY } from './constants.js';
 
-let controls;
+export let controls;
 let currentLevel = 0;
 let currentAnchor = null;
 

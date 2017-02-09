@@ -16,7 +16,7 @@ class Anchor extends THREE.Mesh {
 
 		this._aId = id;
 
-		this.isActive = true;
+		this.isActive = false;
 		this.anchorsToIds = jumpPoints;
 		this.anchorsTo = [];
 		this.anchorsFrom = [];
@@ -33,10 +33,11 @@ class Anchor extends THREE.Mesh {
 	setupDebugMesh() {
 		this.geometry = new THREE.CubeGeometry(ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH);
 		this.material = new THREE.MeshLambertMaterial({
-			color: 0x000000,
+			color: 0x000000, 
 			opacity: 0.1,
 			transparent: true,
 			wireframe: true,
+			visible: false,
 		});
 		this.material.side = THREE.DoubleSide;
 	}
