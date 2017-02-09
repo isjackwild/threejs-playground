@@ -61,7 +61,7 @@ class Artboard extends THREE.Object3D {
 			}
 
 			this.add(target);
-			intersectableObjects.push(target);
+			// intersectableObjects.push(target);
 		});
 	}
 }

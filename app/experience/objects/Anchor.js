@@ -16,6 +16,7 @@ class Anchor extends THREE.Mesh {
 
 		this._aId = id;
 
+		this.isActive = true;
 		this.anchorsToIds = jumpPoints;
 		this.anchorsTo = [];
 		this.anchorsFrom = [];
@@ -64,6 +65,8 @@ class Anchor extends THREE.Mesh {
 
 	onClick() {
 		console.log('click');
+		if (!this.isActive) return;
+		this.isActive = false;
 		moveToPosition(this.position);
 	}
 

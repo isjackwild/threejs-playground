@@ -36,6 +36,8 @@ export const init = () => {
 	for (let key in anchorRefs) {
 		anchorRefs[key].setup();
 	}
+
+	skybox = new Skybox();
 }
 
 const addAnchors = () => {
