@@ -41,6 +41,26 @@ export const init = () => {
 	const sceneRadius = new THREE.Box3().setFromObject(scene).getBoundingSphere().radius;
 	skybox = new Skybox({ radius: sceneRadius * 1.33 });
 	scene.add(skybox);
+
+	addDots(sceneRadius);
+}
+
+const addDots = (sceneRadius) => {
+	const SPACING = 250;
+	const step = Math.ceil(sceneRadius / step);
+	for (let x = -sceneRadius; x < sceneRadius; x += SPACING) {
+		for (let y = -sceneRadius; y < sceneRadius; y += SPACING) {
+			for (let z = -sceneRadius; z < sceneRadius; z += SPACING){
+				const dot = new THREE.Mesh();
+				dot.geometry = new THREE.SphereGeometry(1.5);
+				dot.material = new THREE.MeshBasicMaterial({
+					color: 0xffffff,
+				});
+				dot.position.set(x, y, z);
+				scene.add(dot);
+			}
+		}
+	}
 }
 
 const addAnchors = () => {
