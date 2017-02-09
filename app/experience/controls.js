@@ -23,20 +23,14 @@ const setOrientationControls = (e) => {
 	controls.update();
 }
 
-export const moveToAnchor = (sphere) => {
-	currentAnchor = sphere;
-	
-	const { position, matrixWorld } = currentAnchor;
-	currentAnchor.traverseAncestors(ancestor => ancestor.updateMatrixWorld());
-	const worldPosition = new THREE.Vector3();
-	currentAnchor.localToWorld(worldPosition);
-
-	const dist = new THREE.Vector3().copy(worldPosition).sub(camera.position).length();
-	const dir = new THREE.Vector3().copy(worldPosition).sub(camera.position).normalize();
-	const toPosition = new THREE.Vector3().copy(worldPosition).sub(dir);
+export const moveToPosition = (position) => {
+	const dist = new THREE.Vector3().copy(position).sub(camera.position).length();
+	const dir = new THREE.Vector3().copy(position).sub(camera.position).normalize();
+	const toPosition = new THREE.Vector3().copy(position).sub(dir);
 	const { x, y, z } = toPosition;
-	
-	controls.enabled = false;
+
+	const targetToPosition = new THREE.Vector3().copy(position).add(dir);
+
 
 	TweenLite.to(
 		camera.position,
@@ -44,16 +38,8 @@ export const moveToAnchor = (sphere) => {
 		{
 			x,
 			y,
-			ease: Expo.EaseInOut,
-		}
-	);
-
-	TweenLite.to(
-		camera.position,
-		CAMERA_MOVE_SPEED,
-		{
 			z,
-			ease: Expo.easeNone,
+			ease: Sine.EaseInOut,
 		}
 	);
 
@@ -61,30 +47,23 @@ export const moveToAnchor = (sphere) => {
 		controls.target,
 		CAMERA_MOVE_SPEED,
 		{
-			x: worldPosition.x,
-			y: worldPosition.y,
-			z: worldPosition.z,
+			x: targetToPosition.x,
+			y: targetToPosition.y,
+			z: targetToPosition.z,
 			ease: Sine.EaseInOut,
-			onComplete: () => {
-				controls.enabled = true;
-			},
 		}
 	);
 }
 
-export const moveAlongJumpPath = (jumpPoint) => {
-	jumpPoint.traverseAncestors(ancestor => ancestor.updateMatrixWorld());
-	const startPos = new THREE.Vector3().copy(jumpPoint.position);
-	jumpPoint.parent.localToWorld(startPos);
-
-	const dist = jumpPoint.cameraPath.getLength();
+export const moveAlongJumpPath = (path) => {
+	const dist = path.getLength();
 	const dur = dist / 150;
 
 	const control = { t: 0 };
-
 	const dir = new THREE.Vector3();
+
 	const setCamera = () => {
-		const pos = jumpPoint.cameraPath.getPoint(control.t).add(startPos);
+		const pos = path.getPoint(control.t);
 		dir.copy(pos).sub(camera.position).normalize().multiplyScalar(0.01);
 		camera.position.copy(pos);
 		controls.target.copy(pos.add(dir));
