@@ -89,8 +89,8 @@ export const init = () => {
 	// scene.add(new THREE.AxisHelper(130));
 
 	const sceneRadius = new THREE.Box3().setFromObject(scene).getBoundingSphere().radius;
-	// skybox = new Skybox({ radius: sceneRadius * 1.33 });
-	// scene.add(skybox);
+	skybox = new Skybox({ radius: sceneRadius * 1.33 });
+	scene.add(skybox);
 
 	camera.position.set(0, sceneRadius, 0);
 
