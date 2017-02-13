@@ -34,15 +34,16 @@ class Anchor extends THREE.Mesh {
 	}
 
 	setupDebugMesh() {
-		this.geometry = new THREE.CubeGeometry(ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH);
+		// this.geometry = new THREE.CubeGeometry(ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH);
+		this.geometry = new THREE.SphereGeometry(ANCHOR_BASE_WIDTH, 20, 20);
 		this.material = new THREE.MeshLambertMaterial({
 			color: 0x000000, 
-			opacity: 0.1,
+			opacity: 0.66,
 			transparent: true,
-			wireframe: true,
+			side: THREE.BackSide,
+			// wireframe: true,
 			// visible: false,
 		});
-		this.material.side = THREE.DoubleSide;
 	}
 
 	setupArtboard() {
@@ -68,7 +69,6 @@ class Anchor extends THREE.Mesh {
 	}
 
 	onClick() {
-		console.log('click');
 		if (!this.isActive) return;
 		this.isActive = false;
 		moveToPosition(this.position);

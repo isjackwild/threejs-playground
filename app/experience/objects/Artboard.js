@@ -70,7 +70,7 @@ class Artboard extends THREE.Object3D {
 				},
 				opacity: {
 					type: "f",
-					value: 0.6
+					value: 1
 				},
 				grainStrength: {
 					type: "f",
@@ -80,8 +80,8 @@ class Artboard extends THREE.Object3D {
 			vertexShader: VERTEX_SHADER,
 			fragmentShader: NOISE_FRAGMENT_SHADER,
 			transparent: true,
+			side: THREE.BackSide,
 		});
-		this.background.material.side = THREE.DoubleSide;
 		this.add(this.background);
 	}
 
@@ -107,6 +107,7 @@ class Artboard extends THREE.Object3D {
 				vertexShader: VERTEX_SHADER,
 				fragmentShader: NOISE_FRAGMENT_SHADER,
 				transparent: true,
+				side: THREE.BackSide,
 			});
 			target.material.side = THREE.DoubleSide;
 			target.onClick = () => this.onClickTarget(anchorTo._aId);

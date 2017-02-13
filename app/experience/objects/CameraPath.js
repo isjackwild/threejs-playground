@@ -88,7 +88,31 @@ const createCurvedLine = (start, end) => {
 // }
 // 
 
- 
+function assignUVs(geometry) {
+
+    geometry.faceVertexUvs[0] = [];
+
+    geometry.faces.forEach(function(face) {
+
+        var components = ['x', 'y', 'z'].sort(function(a, b) {
+            return Math.abs(face.normal[a]) > Math.abs(face.normal[b]);
+        });
+
+        var v1 = geometry.vertices[face.a];
+        var v2 = geometry.vertices[face.b];
+        var v3 = geometry.vertices[face.c];
+
+        geometry.faceVertexUvs[0].push([
+            new THREE.Vector2(v1[components[0]], v1[components[1]]),
+            new THREE.Vector2(v2[components[0]], v2[components[1]]),
+            new THREE.Vector2(v3[components[0]], v3[components[1]])
+        ]);
+
+    });
+
+    geometry.uvsNeedUpdate = true;
+}
+
 class CameraPath extends THREE.Mesh {
 	constructor(args) {
 		super(args);
@@ -111,12 +135,17 @@ class CameraPath extends THREE.Mesh {
 		});
 		const tmp = new THREE.Vector3(0, 0, 0);
 		const tmp2 = new THREE.Vector3(0, 0, 0);
+		const up = new THREE.Vector3(0, 1, 0);
 		const maxWidth = 22;
 
 		const noise = new Noise(Math.random());
-		const SCALE = 0.001;
-		const NOISE_OFFSET_MAX = 33;
+		const SCALE = 0.0005;
+		const NOISE_OFFSET_MAX = 40;
 		const step = Math.PI * 2 / points.length;
+
+		const angleTo = this.from.position.angleTo(this.to.position);
+		const directionalNormal = new THREE.Vector3().copy(this.to.position).sub(this.from.position).normalize().applyAxisAngle(up, Math.PI / 2);
+		// const directionalNormal = new THREE.Vector3(1, 0, 0);
 
 		const colourMixAttrs = [];
 
@@ -133,7 +162,13 @@ class CameraPath extends THREE.Mesh {
 
 			const control = (Math.cos(((i * step) - Math.PI)) / 2) + 0.5;
 			const thisWidth = maxWidth * Easing.Sinusoidal.EaseInOut(control);
-			tmp2.x = thisWidth / 2;
+			
+			// directionalNormal.multiplyScalar(this.width / 2);
+
+			tmp2.copy(directionalNormal);
+			tmp2.multiplyScalar(thisWidth / 2);
+			// tmp2.set(thisWidth / 2, 0, 0);
+			// tmp2.applyAxisAngle(up, angleTo);
 			const v1 = new THREE.Vector3().copy(tmp).add(tmp2);
 			const v2 = new THREE.Vector3().copy(tmp).sub(tmp2);
 			this.geometry.vertices.push(v1, v2);
@@ -147,6 +182,7 @@ class CameraPath extends THREE.Mesh {
 			} 
 		}
 
+		assignUVs(this.geometry);
 		this.geometry.computeFaceNormals();
 		this.geometry.computeVertexNormals();
 		this.geometry.computeVertexNormals();
@@ -163,6 +199,28 @@ class CameraPath extends THREE.Mesh {
 		// 	// wireframe: true,
 		// 	side: THREE.DoubleSide,
 		// });
+		// 
+		
+		// this.geometry.computeBoundingBox();
+		// const max = this.geometry.boundingBox.max;
+		// const min = this.geometry.boundingBox.min;
+		// const offset = new THREE.Vector2(0 - min.x, 0 - min.y);
+		// const range = new THREE.Vector2(max.x - min.x, max.y - min.y);
+		// const faces = this.geometry.faces;
+
+		// faces.forEach((face, i) => {
+		// 	const v1 = face.a;
+		// 	const v2 = face.b;
+		// 	const v3 = face.c;
+
+		// 	this.geometry.faceVertexUvs[0].push([
+		// 		new THREE.Vector2((v1.x + offset.x)/range.x, (v1.y + offset.y)/range.y),
+		// 		new THREE.Vector2((v2.x + offset.x)/range.x, (v2.y + offset.y)/range.y),
+		// 		new THREE.Vector2((v3.x + offset.x)/range.x, (v3.y + offset.y)/range.y)
+		// 	]);
+		// });
+
+		
 
 		this.material = new THREE.ShaderMaterial({
 			uniforms: {
@@ -180,7 +238,7 @@ class CameraPath extends THREE.Mesh {
 				},
 				grainStrength: {
 					type: "f",
-					value: 9.0,
+					value: 13.0,
 				}
 			},
 			// attributes: {

@@ -28,9 +28,6 @@ export const init = () => {
 	scene.add(lights[1].target);
 	const up = new THREE.Vector3(0, 1, 0);
 
-	scene.add(new THREE.AxisHelper(100));
-
-	console.log('init scene');
 	addAnchors();
 	addCameraPaths();
 
@@ -38,19 +35,36 @@ export const init = () => {
 		anchorRefs[key].setup();
 	}
 
-	const sceneRadius = new THREE.Box3().setFromObject(scene).getBoundingSphere().radius;
-	skybox = new Skybox({ radius: sceneRadius * 1.5 });
+	const sceneBox = new THREE.Box3().setFromObject(scene);
+	const sceneRadius = sceneBox.getBoundingSphere().radius;
+	skybox = new Skybox({ radius: sceneRadius * 1.25 });
 	scene.add(skybox);
 
-	addDots(sceneRadius);
+	addDots(sceneBox);
 }
 
-const addDots = (sceneRadius) => {
-	const SPACING = 350;
-	const step = Math.ceil(sceneRadius / step);
-	for (let x = -sceneRadius; x < sceneRadius; x += SPACING) {
-		for (let y = -sceneRadius; y < sceneRadius; y += SPACING) {
-			for (let z = -sceneRadius; z < sceneRadius; z += SPACING){
+const addDots = (sceneBox) => {
+	const SPACING = 300;
+	// for (let x = -sceneRadius; x < sceneRadius; x += SPACING) {
+	// 	for (let y = -sceneRadius; y < sceneRadius; y += SPACING) {
+	// 		for (let z = -sceneRadius; z < sceneRadius; z += SPACING){
+	// 			const dot = new THREE.Mesh();
+	// 			dot.geometry = new THREE.SphereGeometry(2);
+	// 			dot.material = new THREE.MeshBasicMaterial({
+	// 				color: 0xffffff,
+	// 			});
+	// 			dot.position.set(x, y, z);
+	// 			scene.add(dot);
+	// 		}
+	// 	}
+	// }
+
+	sceneBox.min.multiplyScalar(1.3);
+	sceneBox.max.multiplyScalar(1.3);
+
+	for (let x = sceneBox.min.x; x < sceneBox.max.x; x += SPACING) {
+		for (let y = sceneBox.min.y; y < sceneBox.max.y; y += SPACING) {
+			for (let z = sceneBox.min.z; z < sceneBox.max.z; z += SPACING){
 				const dot = new THREE.Mesh();
 				dot.geometry = new THREE.SphereGeometry(2);
 				dot.material = new THREE.MeshBasicMaterial({
@@ -101,13 +115,7 @@ const addAnchors = () => {
 
 			// const random = (Math.random() * ANCHOR_SPREAD / 4) - ANCHOR_SPREAD / 2;
 			const advance = new THREE.Vector3().copy(pathDirection).multiplyScalar((iA === 0 ? 0 : ANCHOR_SPREAD));
-			if (iA === 0) {
-				advance.y += (Math.random() * ANCHOR_SPREAD / 2) - ANCHOR_SPREAD / 4;
-			} else {
-				advance.y += (Math.random() * ANCHOR_SPREAD) - ANCHOR_SPREAD / 2;
-			}
-			// tmpAxis.set(0, randomAngle(), randomAngle());
-			// advance.applyAxisAngle(up, randomAngle());
+			advance.y += (Math.random() * ANCHOR_SPREAD * 2) - ANCHOR_SPREAD;
 			
 			const totalSpread = thisLevelCount - 1 * ANCHOR_ANGLE_SPREAD;
 			const angle = thisLevelCount === 1 ? 0 : ((thisLevelItterator / (thisLevelCount - 1)) * totalSpread) - totalSpread / 2;
