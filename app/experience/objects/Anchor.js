@@ -5,6 +5,7 @@ import { moveToPosition, moveAlongJumpPath } from '../controls.js';
 import { fibonacciSphere } from '../UTIL.js';
 import textLabel from './text-label.js';
 import Artboard from './Artboard.js';
+import { intersectableObjects } from '../input-handler.js';
 // import JumpPoint from './JumpPoint.js';
 import { ANCHOR_BASE_WIDTH, ANCHOR_WIDTH_PER_LINK, OPACITY, FOCUS_OPACITY } from '../CONSTANTS.js';
 
@@ -12,11 +13,12 @@ import { ANCHOR_BASE_WIDTH, ANCHOR_WIDTH_PER_LINK, OPACITY, FOCUS_OPACITY } from
 class Anchor extends THREE.Mesh {
 	constructor(args) {
 		super(args);
-		const { position, id, jumpPoints } = args;
+		const { position, id, jumpPoints, colors } = args;
 
 		this._aId = id;
 
 		this.isActive = false;
+		this.colors = colors;
 		this.anchorsToIds = jumpPoints;
 		this.anchorsTo = [];
 		this.anchorsFrom = [];
@@ -28,6 +30,7 @@ class Anchor extends THREE.Mesh {
 	setup() {
 		this.setupDebugMesh();
 		if (this.anchorsTo.length) this.setupArtboard();
+		intersectableObjects.push(this);
 	}
 
 	setupDebugMesh() {
@@ -37,7 +40,7 @@ class Anchor extends THREE.Mesh {
 			opacity: 0.1,
 			transparent: true,
 			wireframe: true,
-			visible: false,
+			// visible: false,
 		});
 		this.material.side = THREE.DoubleSide;
 	}

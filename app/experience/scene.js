@@ -8,7 +8,7 @@ import Anchor from './objects/Anchor.js';
 import CameraPath from './objects/CameraPath';
 import Skybox from './objects/Skybox.js';
 import { ANCHOR_SPREAD, ANCHOR_ANGLE_SPREAD, GROUP_RADIUS } from './constants.js';
-import { structure } from './data/CONTENT_STRUCTURE';
+import { threads } from './data/CONTENT_STRUCTURE';
 import { lights } from './lighting.js';
 import { controls } from './controls.js';
 
@@ -22,7 +22,7 @@ const randomAngle = () => {
 
 export const init = () => {
 	scene = new THREE.Scene();
-	scene.fog = new THREE.FogExp2(0x55524a, 0);
+	// scene.fog = new THREE.FogExp2(0x55524a, 0);
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 	scene.add(lights[1].target);
@@ -39,20 +39,20 @@ export const init = () => {
 	}
 
 	const sceneRadius = new THREE.Box3().setFromObject(scene).getBoundingSphere().radius;
-	skybox = new Skybox({ radius: sceneRadius * 1.33 });
+	skybox = new Skybox({ radius: sceneRadius * 1.5 });
 	scene.add(skybox);
 
 	addDots(sceneRadius);
 }
 
 const addDots = (sceneRadius) => {
-	const SPACING = 250;
+	const SPACING = 350;
 	const step = Math.ceil(sceneRadius / step);
 	for (let x = -sceneRadius; x < sceneRadius; x += SPACING) {
 		for (let y = -sceneRadius; y < sceneRadius; y += SPACING) {
 			for (let z = -sceneRadius; z < sceneRadius; z += SPACING){
 				const dot = new THREE.Mesh();
-				dot.geometry = new THREE.SphereGeometry(1.5);
+				dot.geometry = new THREE.SphereGeometry(2);
 				dot.material = new THREE.MeshBasicMaterial({
 					color: 0xffffff,
 				});
@@ -74,46 +74,59 @@ const addAnchors = () => {
 	const pathStart = new THREE.Vector3().copy(pathDirection).multiplyScalar(ANCHOR_SPREAD);
 	const tmpPrevLevelPosition = new THREE.Vector3().copy(pathStart);
 
-	structure.forEach((anchorData, iA) => {
-		thisLevelItterator++;
-		if (anchorData.depth !== prevAnchorDepth) {
-			thisLevelCount = _.filter(structure, _anchorData => _anchorData.depth === anchorData.depth).length;
-			thisLevelItterator = 0;
-			prevAnchorDepth = anchorData.depth;
-			tmpPrevLevelPosition.set(0, 0, 0);
-			prevLevelAnchorPositions.forEach(v => tmpPrevLevelPosition.add(v));
-			tmpPrevLevelPosition.multiplyScalar(1 / prevLevelAnchorPositions.length);
-			prevLevelAnchorPositions = [];
-		}
+	threads.forEach((thread, iP) => {
+		const pathDirection = new THREE.Vector3(1, 0, 0).applyAxisAngle(up, (iP / threads.length) * Math.PI * 2);
 
-		const advance = new THREE.Vector3().copy(pathDirection).multiplyScalar((iA === 0 ? 0 : ANCHOR_SPREAD));
-		if (iA === 0) {
-			advance.y += (Math.random() * ANCHOR_SPREAD / 2) - ANCHOR_SPREAD / 4;
-		} else {
-			advance.y += (Math.random() * ANCHOR_SPREAD) - ANCHOR_SPREAD / 2;
-		}
-		
-		const totalSpread = thisLevelCount - 1 * ANCHOR_ANGLE_SPREAD;
-		const angle = thisLevelCount === 1 ? 0 : ((thisLevelItterator / (thisLevelCount - 1)) * totalSpread) - totalSpread / 2;
-		advance.applyAxisAngle(up, angle);
-		
-		const position = new THREE.Vector3().copy(tmpPrevLevelPosition).add(advance);
-		prevLevelAnchorPositions.push(position);
+		const pathStart = new THREE.Vector3().copy(pathDirection).multiplyScalar(ANCHOR_SPREAD);
+		const tmpPrevLevelPosition = new THREE.Vector3().copy(pathStart);
+		// const tmpAxis = new THREE.Vector3();
+		let prevAnchorDepth = 0;
+		let prevLevelAnchorPositions = [];
+		let thisLevelCount = 1;
+		let thisLevelItterator = 0;
+		const colors = Math.random() * 0xffffff;
 
-		const args = {
-			...anchorData,
-			position,
-		}
-		const anchor = new Anchor(args);
-		anchorRefs[anchorData.id] = anchor;
-		intersectableObjects.push(anchor);
-		scene.add(anchor);
+		thread.anchors.forEach((anchorData, iA) => {
+			thisLevelItterator++;
+			if (anchorData.depth !== prevAnchorDepth) {
+				thisLevelCount = _.filter(thread.anchors, _anchorData => _anchorData.depth === anchorData.depth).length;
+				// console.log(thisLevelCount);
+				thisLevelItterator = 0;
+				prevAnchorDepth = anchorData.depth;
+				tmpPrevLevelPosition.set(0, 0, 0);
+				prevLevelAnchorPositions.forEach(v => tmpPrevLevelPosition.add(v));
+				tmpPrevLevelPosition.multiplyScalar(1 / prevLevelAnchorPositions.length);
+				prevLevelAnchorPositions = []
+			}
 
-		if (iA === 0) { 
-			camera.position.copy(position);
-			controls.target.copy(position).add(pathDirection);
-			console.log(camera.position, position);
-		}
+			// const random = (Math.random() * ANCHOR_SPREAD / 4) - ANCHOR_SPREAD / 2;
+			const advance = new THREE.Vector3().copy(pathDirection).multiplyScalar((iA === 0 ? 0 : ANCHOR_SPREAD));
+			if (iA === 0) {
+				advance.y += (Math.random() * ANCHOR_SPREAD / 2) - ANCHOR_SPREAD / 4;
+			} else {
+				advance.y += (Math.random() * ANCHOR_SPREAD) - ANCHOR_SPREAD / 2;
+			}
+			// tmpAxis.set(0, randomAngle(), randomAngle());
+			// advance.applyAxisAngle(up, randomAngle());
+			
+			const totalSpread = thisLevelCount - 1 * ANCHOR_ANGLE_SPREAD;
+			const angle = thisLevelCount === 1 ? 0 : ((thisLevelItterator / (thisLevelCount - 1)) * totalSpread) - totalSpread / 2;
+			advance.applyAxisAngle(up, angle);
+			
+			const position = new THREE.Vector3().copy(tmpPrevLevelPosition).add(advance);
+			prevLevelAnchorPositions.push(position);
+
+			const args = {
+				...anchorData,
+				position,
+				colors: thread.colors,
+			}
+			const anchor = new Anchor(args);
+			anchorRefs[anchorData.id] = anchor;
+			scene.add(anchor);
+
+			if (iA === 0) anchor.isActive = true; 
+		});
 	});
 }
 

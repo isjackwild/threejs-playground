@@ -93,11 +93,11 @@ class Artboard extends THREE.Object3D {
 				uniforms: {
 					color: {
 						type: "c",
-						value: new THREE.Color(0x0194ac)
+						value: new THREE.Color(anchorTo.colors.anchor),
 					},
 					opacity: {
 						type: "f",
-						value: 1
+						value: 1,
 					},
 					grainStrength: {
 						type: "f",
@@ -122,7 +122,7 @@ class Artboard extends THREE.Object3D {
 			}
 
 			this.add(target);
-			// intersectableObjects.push(target);
+			intersectableObjects.push(target);
 		});
 	}
 }

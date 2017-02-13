@@ -49,7 +49,8 @@ class Skybox extends THREE.Mesh {
 			},
 			vertexShader: VERTEX_SHADER,
 			fragmentShader: NOISE_FRAGMENT_SHADER,
-			transparent: true
+			transparent: true,
+			// wireframe: true,
 		});
 		this.material.shading = THREE.SmoothShading;
 		this.material.side = THREE.BackSide;

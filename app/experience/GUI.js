@@ -18,11 +18,11 @@ export const init = () => {
 	rendr.addColor(colorControls, 'renderer').onChange((value) => {
 		const newColor = new THREE.Color(value);
 		renderer.setClearColor(newColor);
-		scene.fog.color = newColor;
+		// scene.fog.color = newColor;
 		skybox.material.uniforms.color.value = newColor;
 	});
 	renderer.setClearColor(new THREE.Color(colorControls.renderer));
-	scene.fog.color = new THREE.Color(colorControls.renderer);
+	// scene.fog.color = new THREE.Color(colorControls.renderer);
 	skybox.material.uniforms.color.value = new THREE.Color(colorControls.renderer);
 }
 
