@@ -57,7 +57,7 @@ export const moveToPosition = (position) => {
 
 export const moveAlongJumpPath = (path) => {
 	const dist = path.getLength();
-	const dur = dist / 250;
+	const dur = dist / 500;
 
 	const control = { t: 0 };
 	const dir = new THREE.Vector3();

@@ -1,9 +1,11 @@
+// COLOURS: Muted Warmer Grey-tones for the bubbles, and more tonally stronger threads
+
 export const threads = [
 	{
 		colors: {
-			anchor: '#FFA925',
+			anchor: '#a0998e',
+			jump: '#FFA925',
 			renderer: '#243869',
-			jump: '#2a5b66',
 			line: '#ffffff',
 		},
 		anchors: [
@@ -15,9 +17,9 @@ export const threads = [
 	},
 	{	
 		colors: {
-			anchor: '#4360AE',
+			anchor: '#9094a0',
+			jump: '#5545b2', //blue
 			renderer: '#243869',
-			jump: '#2a5b66',
 			line: '#ffffff',
 		},
 		anchors: [
@@ -28,9 +30,9 @@ export const threads = [
 	},
 	{
 		colors: {
-			anchor: '#FC5556',
+			anchor: '#c4a7a1', //orange
+			jump: '#fc7d67',
 			renderer: '#243869',
-			jump: '#2a5b66',
 			line: '#ffffff',
 		},
 		anchors: [
@@ -43,14 +45,30 @@ export const threads = [
 	},
 	{
 		colors: {
-			anchor: '#269751',
+			anchor: '#85968c',
+			jump: '#76e2cd',
 			renderer: '#243869',
-			jump: '#2a5b66',
 			line: '#ffffff',
 		},
 		anchors: [
 			{id: 'd0', depth: 0, jumpPoints: ['d1', 'c3']},
 			{id: 'd1', depth: 1, jumpPoints: []},
+		]
+	},
+	{
+		colors: {
+			anchor: '#a8959d',
+			jump: '#ce333b', //rasberry
+			renderer: '#ffffff',
+			line: '#ffffff',
+		},
+		anchors: [
+			{id: 'e0', depth: 0, jumpPoints: ['d1', 'c3', 'e1']},
+			{id: 'e1', depth: 1, jumpPoints: ['e3']},
+			{id: 'e2', depth: 1, jumpPoints: ['e4', 'e5', 'c4']},
+			{id: 'e3', depth: 2, jumpPoints: ['a2']},
+			{id: 'e4', depth: 2, jumpPoints: ['e5', 'e5']},
+			{id: 'e5', depth: 2, jumpPoints: ['b2']},
 		]
 	},
 ]

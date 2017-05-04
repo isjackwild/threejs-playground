@@ -48,7 +48,7 @@ class Artboard extends THREE.Object3D {
 	}
 	
 	setup() {
-		this.setupBackground();
+		// this.setupBackground();
 		this.setupTargets();
 	}
 
@@ -88,12 +88,13 @@ class Artboard extends THREE.Object3D {
 	setupTargets() {
 		this.anchorsTo.forEach((anchorTo, i) => {
 			const target = new THREE.Mesh();
-			target.geometry = new THREE.PlaneGeometry(ANCHOR_BASE_WIDTH / 5, ANCHOR_BASE_WIDTH / 5);
+			// target.geometry = new THREE.PlaneGeometry(ANCHOR_BASE_WIDTH / 5, ANCHOR_BASE_WIDTH / 5);
+			target.geometry = new THREE.SphereGeometry(ANCHOR_BASE_WIDTH / 10, 20, 20);
 			target.material = new THREE.ShaderMaterial({
 				uniforms: {
 					color: {
 						type: "c",
-						value: new THREE.Color(anchorTo.colors.anchor),
+						value: new THREE.Color(anchorTo.colors.jump),
 					},
 					opacity: {
 						type: "f",
@@ -101,7 +102,7 @@ class Artboard extends THREE.Object3D {
 					},
 					grainStrength: {
 						type: "f",
-						value: 9,
+						value: 2.0,
 					}
 				},
 				vertexShader: VERTEX_SHADER,

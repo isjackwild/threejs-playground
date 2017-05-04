@@ -10,6 +10,32 @@ import { intersectableObjects } from '../input-handler.js';
 import { ANCHOR_BASE_WIDTH, ANCHOR_WIDTH_PER_LINK, OPACITY, FOCUS_OPACITY } from '../CONSTANTS.js';
 
 
+const VERTEX_SHADER = `
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const NOISE_FRAGMENT_SHADER = `
+	uniform vec3 color;
+	uniform float opacity;
+	uniform float grainStrength;
+
+	varying vec2 vUv;
+
+	void main() {
+		float strength = grainStrength;
+
+    	float x = (vUv.x + 4.0) * (vUv.y + 4.0) * 10.0;
+		vec4 grain = vec4(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * strength;
+
+		gl_FragColor = vec4(color + grain.xyz, opacity);
+	}`;
+
+
 class Anchor extends THREE.Mesh {
 	constructor(args) {
 		super(args);
@@ -36,13 +62,36 @@ class Anchor extends THREE.Mesh {
 	setupDebugMesh() {
 		// this.geometry = new THREE.CubeGeometry(ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH, ANCHOR_BASE_WIDTH);
 		this.geometry = new THREE.SphereGeometry(ANCHOR_BASE_WIDTH, 20, 20);
-		this.material = new THREE.MeshLambertMaterial({
-			color: 0x000000, 
-			opacity: 0.66,
+		// this.material = new THREE.MeshStandardMaterial({
+		// 	color: this.colors.anchor, 
+		// 	opacity: 1,
+		// 	// transparent: true,
+		// 	side: THREE.DoubleSide,
+		// 	roughness: 0.8,
+		// 	metalness: 0.5,
+		// 	// wireframe: true,
+		// 	// visible: false,
+		// });
+
+		this.material = new THREE.ShaderMaterial({
+			uniforms: {
+				color: {
+					type: "c",
+					value: new THREE.Color(this.colors.anchor)
+				},
+				opacity: {
+					type: "f",
+					value: 0.9,
+				},
+				grainStrength: {
+					type: "f",
+					value: 3.0,
+				}
+			},
+			vertexShader: VERTEX_SHADER,
+			fragmentShader: NOISE_FRAGMENT_SHADER,
 			transparent: true,
 			side: THREE.BackSide,
-			// wireframe: true,
-			// visible: false,
 		});
 	}
 

@@ -7,12 +7,12 @@ import { intersectableObjects } from './input-handler.js';
 import Anchor from './objects/Anchor.js';
 import CameraPath from './objects/CameraPath';
 import Skybox from './objects/Skybox.js';
-import { ANCHOR_SPREAD, ANCHOR_ANGLE_SPREAD, GROUP_RADIUS } from './constants.js';
+import { ANCHOR_SPREAD, ANCHOR_START_SPREAD, ANCHOR_ANGLE_SPREAD, GROUP_RADIUS } from './constants.js';
 import { threads } from './data/CONTENT_STRUCTURE';
 import { lights } from './lighting.js';
 import { controls } from './controls.js';
 
-export let scene, boxMesh, skybox, sceneRadius, directionalLightHelper, anchorRefs = {};
+export let scene, boxMesh, skybox, sceneRadius, directionalLightHelper, anchorRefs = {}, ribbonRefs = [];
 // const directionalLightTarget = new THREE.Vector3();
 
 // Less random spread angles perhaps????
@@ -22,7 +22,7 @@ const randomAngle = () => {
 
 export const init = () => {
 	scene = new THREE.Scene();
-	// scene.fog = new THREE.FogExp2(0x55524a, 0);
+	// scene.fog = new THREE.FogExp2(0x55524a, 0.0006);
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 	scene.add(lights[1].target);
@@ -44,7 +44,7 @@ export const init = () => {
 }
 
 const addDots = (sceneBox) => {
-	const SPACING = 300;
+	const SPACING = 600;
 	// for (let x = -sceneRadius; x < sceneRadius; x += SPACING) {
 	// 	for (let y = -sceneRadius; y < sceneRadius; y += SPACING) {
 	// 		for (let z = -sceneRadius; z < sceneRadius; z += SPACING){
@@ -66,7 +66,7 @@ const addDots = (sceneBox) => {
 		for (let y = sceneBox.min.y; y < sceneBox.max.y; y += SPACING) {
 			for (let z = sceneBox.min.z; z < sceneBox.max.z; z += SPACING){
 				const dot = new THREE.Mesh();
-				dot.geometry = new THREE.SphereGeometry(2);
+				dot.geometry = new THREE.SphereGeometry(5);
 				dot.material = new THREE.MeshBasicMaterial({
 					color: 0xffffff,
 				});
@@ -85,13 +85,13 @@ const addAnchors = () => {
 
 	const up = new THREE.Vector3(0, 1, 0);
 	const pathDirection = new THREE.Vector3(1, 0, 0);
-	const pathStart = new THREE.Vector3().copy(pathDirection).multiplyScalar(ANCHOR_SPREAD);
-	const tmpPrevLevelPosition = new THREE.Vector3().copy(pathStart);
+	// const pathStart = new THREE.Vector3().copy(pathDirection).multiplyScalar(ANCHOR_START_SPREAD);
+	// const tmpPrevLevelPosition = new THREE.Vector3().copy(pathStart);
 
 	threads.forEach((thread, iP) => {
 		const pathDirection = new THREE.Vector3(1, 0, 0).applyAxisAngle(up, (iP / threads.length) * Math.PI * 2);
 
-		const pathStart = new THREE.Vector3().copy(pathDirection).multiplyScalar(ANCHOR_SPREAD);
+		const pathStart = new THREE.Vector3().copy(pathDirection).multiplyScalar(ANCHOR_START_SPREAD);
 		const tmpPrevLevelPosition = new THREE.Vector3().copy(pathStart);
 		// const tmpAxis = new THREE.Vector3();
 		let prevAnchorDepth = 0;
@@ -115,7 +115,9 @@ const addAnchors = () => {
 
 			// const random = (Math.random() * ANCHOR_SPREAD / 4) - ANCHOR_SPREAD / 2;
 			const advance = new THREE.Vector3().copy(pathDirection).multiplyScalar((iA === 0 ? 0 : ANCHOR_SPREAD));
-			advance.y += (Math.random() * ANCHOR_SPREAD * 2) - ANCHOR_SPREAD;
+			
+			if (iA !== 0) advance.y += (Math.random() * ANCHOR_SPREAD * 2) - ANCHOR_SPREAD;
+
 			
 			const totalSpread = thisLevelCount - 1 * ANCHOR_ANGLE_SPREAD;
 			const angle = thisLevelCount === 1 ? 0 : ((thisLevelItterator / (thisLevelCount - 1)) * totalSpread) - totalSpread / 2;
