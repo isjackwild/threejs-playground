@@ -18,11 +18,9 @@ export const Fish = (initPos = new THREE.Vector3()) => {
 
 	const update = () => {
 		vel.add(acc);
-		vel.clampLength(0, FISH_MAX_VEL);
+		vel.clampLength(0, 1);
 		pos.add(vel);
 		pos.clampScalar(-FF_DIMENTIONS / 2, FF_DIMENTIONS / 2);
-		console.log(acc, vel, pos);
-
 
 		mesh.position.copy(pos);
 		acc.set(0, 0, 0);

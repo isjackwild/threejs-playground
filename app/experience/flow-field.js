@@ -9,6 +9,7 @@ const arrowHelpers = [];
 const noisePhi = new Noise(Math.random());
 const noiseTheta = new Noise(Math.random());
 const noiseMag = new Noise(Math.random());
+const tmp = new THREE.Vector3();
 let noiseTime = 0;
 
 const spherical = new THREE.Spherical();
@@ -26,10 +27,14 @@ export const setVectors = () => {
 			for (let z = 0; z <= FF_DIMENTIONS / FF_RESOLUTION; z++) {
 				if (!values[x][y][z]) values[x][y][z] = new THREE.Vector3();
 
-				const phi = noisePhi.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) * Math.PI * 2;
-				const theta = noiseTheta.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) * Math.PI;
+				const phi = (noisePhi.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) + 1 / 2) * Math.PI;
+				const theta = (noiseTheta.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) + 1 / 2) * Math.PI * 2;
 				const mag = (noiseMag.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) + 1) / 2;
-				// console.log(mag);
+
+				// const phi = 0.5 * Math.PI;
+				// const theta = 0;
+				// const mag = (noiseMag.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) + 1) / 2;
+				// // console.log(mag);
 				spherical.set(1, phi, theta);
 
 				values[x][y][z].setFromSpherical(spherical).normalize();
@@ -63,15 +68,28 @@ const draw = () => {
 	}
 }
 
+// export const lookup = (vec) => {
+// 	const x = Math.floor((vec.x + FF_DIMENTIONS / 2) / FF_RESOLUTION);
+// 	const y = Math.floor((vec.y + FF_DIMENTIONS / 2) / FF_RESOLUTION);
+// 	const z = Math.floor((vec.y + FF_DIMENTIONS / 2) / FF_RESOLUTION);
+// 	return new THREE.Vector3().copy(values[x][y][z]).multiplyScalar(values[x][y][z].magnitude * 3);
+// }
+
 export const lookup = (vec) => {
-	const x = Math.floor((vec.x + FF_DIMENTIONS / 2) / FF_RESOLUTION);
-	const y = Math.floor((vec.y + FF_DIMENTIONS / 2) / FF_RESOLUTION);
-	const z = Math.floor((vec.y + FF_DIMENTIONS / 2) / FF_RESOLUTION);
-	return new THREE.Vector3().copy(values[x][y][z]).multiplyScalar(values[x][y][z].magnitude * 3);
+	const { x, y, z } = vec;
+	
+	const phi = (noisePhi.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) + 1 / 2) * Math.PI * 2;
+	const theta = (noiseTheta.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) + 1 / 2) * Math.PI * 2;
+	const mag = (noiseMag.simplex3(x * FF_NOISE_SCALE + noiseTime, y * FF_NOISE_SCALE + noiseTime, z * FF_NOISE_SCALE + noiseTime) + 1) / 2;
+	// console.log(mag);
+	spherical.set(1, phi, theta);
+
+	tmp.setFromSpherical(spherical).normalize().multiplyScalar(mag);
+	return tmp;
 }
 
 export const update = (delta) => {
 	noiseTime += FF_NOISE_SPEED * delta;
 	setVectors();
-	// draw();
+	draw();
 }
