@@ -2,11 +2,17 @@ const THREE = require('three');
 import { init as initScene, update as updateScene, scene } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
+import { update as updateFlowField, lookup as lookupFlowField } from './flow-field.js';
 import { init as initInput } from './input-handler.js';
+import { init as initFlowField } from './flow-field.js';
+import { Fish } from './fish.js';
+
+import { FF_DIMENTIONS } from './CONSTANTS.js';
 
 let canvas;
 let raf, then, now, delta;
 let currentCamera, currentScene;
+let fishes = [];
 export let renderer;
 
 export const init = () => {
@@ -16,6 +22,14 @@ export const init = () => {
 	initControls();
 	initScene();
 	initInput();
+	initFlowField();
+
+	for (let i = 0; i < 50; i++) {
+		const x = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
+		const y = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
+		const z = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
+		fishes.push(Fish(new THREE.Vector3(x, y, z)));
+	}
 
 	currentCamera = camera;
 	currentScene = scene;
@@ -43,6 +57,11 @@ export const onResize = (w, h) => {
 
 const update = (delta) => {
 	updateScene(delta);
+	fishes.forEach(f => {
+		f.applyForce(lookupFlowField(f.pos));
+		f.update();
+	});
+	updateFlowField(delta);
 	updateControls(delta);
 }
 

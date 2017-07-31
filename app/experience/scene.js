@@ -2,6 +2,8 @@ const THREE = require('three');
 import { camera } from './camera.js';
 import { intersectableObjects } from './input-handler.js';
 import { lights } from './lighting.js';
+import { FF_DIMENTIONS, FF_RESOLUTION } from './CONSTANTS.js';
+
 
 export let scene, boxMesh;
 
@@ -11,10 +13,10 @@ export const init = () => {
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 
-	const boxGeometry = new THREE.BoxGeometry( 10, 10, 10 );
-	const boxMaterial = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
-	boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
-	scene.add( boxMesh );
+	// const boxGeometry = new THREE.BoxGeometry( FF_DIMENTIONS, FF_DIMENTIONS, FF_DIMENTIONS );
+	// const boxMaterial = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } );
+	// boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
+	// scene.add( boxMesh );
 }
 
 export const update = (delta) => {
