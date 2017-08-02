@@ -22,9 +22,9 @@ export const init = () => {
 	initControls();
 	initScene();
 	initInput();
-	initFlowField();
+	// initFlowField();
 
-	for (let i = 0; i < 50; i++) {
+	for (let i = 0; i < 150; i++) {
 		const x = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
 		const y = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
 		const z = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
@@ -58,8 +58,12 @@ export const onResize = (w, h) => {
 const update = (delta) => {
 	updateScene(delta);
 	fishes.forEach(f => {
-		f.applyForce(lookupFlowField(f.pos));
-		f.update();
+		// f.applyForce(lookupFlowField(f.pos).multiplyScalar(10));
+		f.wander();
+		// f.align(fishes);
+		f.seperate(fishes);
+		// f.cohesion(fishes);
+		f.update(delta);
 	});
 	updateFlowField(delta);
 	updateControls(delta);
