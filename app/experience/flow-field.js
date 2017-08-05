@@ -45,7 +45,7 @@ const draw = () => {
 						y: y * FF_RESOLUTION - FF_DIMENTIONS / 2,
 						z: z * FF_RESOLUTION - FF_DIMENTIONS / 2,
 					});
-					const arrowHelper = new THREE.ArrowHelper(vec, origin, 50 * vec.length(), 0xff0000);
+					const arrowHelper = new THREE.ArrowHelper(vec, origin, 80 * vec.length(), 0xff0000);
 
 					arrowHelpers[x][y][z] = arrowHelper;
 					scene.add(arrowHelper);
@@ -56,7 +56,7 @@ const draw = () => {
 						z: z * FF_RESOLUTION - FF_DIMENTIONS / 2,
 					});
 					arrowHelpers[x][y][z].setDirection(vec);
-					arrowHelpers[x][y][z].setLength(50 * vec.length());
+					arrowHelpers[x][y][z].setLength(80 * vec.length());
 				}
 			}
 		}
@@ -65,5 +65,5 @@ const draw = () => {
 
 export const update = (delta) => {
 	noiseTime += FF_NOISE_SPEED * delta;
-	draw();
+	// draw();
 }
