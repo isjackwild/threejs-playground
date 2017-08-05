@@ -3,6 +3,7 @@ import { init as initScene, update as updateScene, scene } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
 import { update as updateFlowField, lookup as lookupFlowField } from './flow-field.js';
+import { init as initSea, update as updateSea } from './sea.js';
 import { init as initInput } from './input-handler.js';
 import { init as initFlowField } from './flow-field.js';
 import { Fish } from './fish.js';
@@ -23,6 +24,7 @@ export const init = () => {
 	initControls();
 	initScene();
 	initInput();
+	initSea();
 	// initFlowField();
 
 	for (let i = 0; i < 50; i++) {
@@ -76,14 +78,8 @@ const update = (delta) => {
 	});
 	updateFlowField(delta);
 	updateControls(delta);
+	updateSea();
 
-	// if (Math.random() > 0.96) {
-	// 	target.position.set(
-	// 		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
-	// 		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
-	// 		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
-	// 	);
-	// }
 	target.position.copy(lookupFlowField({ x: 0, y: 0, z: 0 })).multiplyScalar(FF_DIMENTIONS / 2);
 }
 

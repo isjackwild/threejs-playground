@@ -13,10 +13,11 @@ export const init = () => {
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 
-	const boxGeometry = new THREE.BoxGeometry( FF_DIMENTIONS, FF_DIMENTIONS, FF_DIMENTIONS );
-	const boxMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
-	boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
-	scene.add( boxMesh );
+	// const boxGeometry = new THREE.BoxGeometry( FF_DIMENTIONS, FF_DIMENTIONS, FF_DIMENTIONS, 10, 10, 10 );
+	// const boxMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } );
+	// boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
+	// scene.add( boxMesh );
+	// console.log(boxGeometry);
 }
 
 export const update = (delta) => {
