@@ -7,3 +7,4 @@ export const FISH_MAX_STEER = 0.2;
 export const FISH_SIBLING_DIST = 350;
 export const FISH_SEPERATION = 80;
 export const FISH_VIEW_DIST = 300;
+export const TOUCH_RADIUS = 35;

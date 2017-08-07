@@ -15,7 +15,7 @@ export const Fish = (initPos = new THREE.Vector3()) => {
 	const tmp2 = new THREE.Vector3();
 
 	const geom = new THREE.BoxGeometry( 30, 20, 10 );
-	const material = new THREE.MeshStandardMaterial( { color: 0x0000ff } );
+	const material = new THREE.MeshStandardMaterial( { color: 0xe8451b } );
 	const mesh = new THREE.Mesh( geom, material );
 	mesh.castShadow = true;
 	mesh.receiveShadow = true;

@@ -58,6 +58,7 @@ const castFocus = () => {
 	let found = false;
 	intersectableObjects.forEach((obj) => {
 		const intersects = raycaster.intersectObject( obj, false );
+		if (intersects.length) obj.onIntersect(intersects);
 	});
 }
 

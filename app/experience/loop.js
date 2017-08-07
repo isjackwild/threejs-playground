@@ -1,4 +1,5 @@
 const THREE = require('three');
+const Stats = require('../lib/stats.min.js');
 import { init as initScene, update as updateScene, scene } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
@@ -11,7 +12,7 @@ import { Fish } from './fish.js';
 import { FF_DIMENTIONS } from './CONSTANTS.js';
 
 let canvas;
-let raf, then, now, delta;
+let raf, then, now, delta, stats;
 let currentCamera, currentScene;
 let fishes = [];
 export let renderer;
@@ -21,10 +22,12 @@ export const init = () => {
 	canvas = document.getElementsByClassName('canvas')[0];
 	setupRenderer();
 	initCamera();
-	initControls();
+	initControls(renderer.domElement);
 	initScene();
 	initInput();
 	initSea();
+	stats = new Stats();
+	document.body.appendChild(stats.dom);
 	// initFlowField();
 
 	for (let i = 0; i < 50; i++) {
@@ -43,7 +46,7 @@ export const init = () => {
 		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
 		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
 	);
-	scene.add( target );
+	// scene.add( target );
 
 	currentCamera = camera;
 	currentScene = scene;
@@ -83,7 +86,9 @@ const update = (delta) => {
 	updateControls(delta);
 	updateSea();
 
-	target.position.copy(lookupFlowField({ x: 0, y: 0, z: 0 })).multiplyScalar(FF_DIMENTIONS / 2);
+	target.position.copy(lookupFlowField({ x: 0, y: 0, z: 0 })).multiplyScalar(FF_DIMENTIONS / 3);
+
+	stats.update();
 }
 
 const render = () => {

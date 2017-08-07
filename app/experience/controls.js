@@ -5,8 +5,8 @@ import { camera } from './camera.js';
 
 let controls;
 
-export const init = () => {
-	controls = new THREE.OrbitControls(camera);
+export const init = (domEl) => {
+	controls = new THREE.OrbitControls(camera, domEl);
 	controls.target.set(
 		camera.position.x,
 		camera.position.y,
