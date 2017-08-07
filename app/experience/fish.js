@@ -1,5 +1,5 @@
 const THREE = require('three');
-require('../../node_modules/three/examples/js/modifiers/BufferSubdivisionModifier.js');
+// require('../../node_modules/three/examples/js/modifiers/BufferSubdivisionModifier.js');
 import { FF_DIMENTIONS, FISH_MAX_VEL, FISH_MAX_STEER, FISH_SIBLING_DIST, FISH_SEPERATION, FISH_VIEW_DIST } from './CONSTANTS.js';
 import { scene } from './scene.js';
 import { convertToRange } from '../lib/maths.js';
@@ -14,9 +14,11 @@ export const Fish = (initPos = new THREE.Vector3()) => {
 	const tmp = new THREE.Vector3();
 	const tmp2 = new THREE.Vector3();
 
-	const geom = new THREE.BoxGeometry( 30, 30, 30 );
-	const material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
+	const geom = new THREE.BoxGeometry( 30, 20, 10 );
+	const material = new THREE.MeshStandardMaterial( { color: 0x0000ff } );
 	const mesh = new THREE.Mesh( geom, material );
+	mesh.castShadow = true;
+	mesh.receiveShadow = true;
 	scene.add( mesh );
 
 	const seek = (target) => {
@@ -106,6 +108,7 @@ export const Fish = (initPos = new THREE.Vector3()) => {
 		pos.clampScalar(-FF_DIMENTIONS / 2, FF_DIMENTIONS / 2);
 
 		mesh.position.copy(pos);
+		mesh.lookAt(tmp.copy(pos).add(vel));
 		acc.set(0, 0, 0);
 	}
 

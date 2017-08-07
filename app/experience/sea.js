@@ -4,13 +4,24 @@ import { FF_DIMENTIONS, FF_RESOLUTION } from './CONSTANTS.js';
 import { scene } from './scene.js';
 import { lookup as lookupFlowField } from './flow-field.js';
 
-let geom, material, sea;
+let geom, materials, sea;
 const topVerts = [];
 
 export const init = () => {
-	geom = new THREE.BoxGeometry( FF_DIMENTIONS, FF_DIMENTIONS - 200, FF_DIMENTIONS, 50, 1, 50 );
-	material = new THREE.MeshBasicMaterial( { color: 0xffff00, wireframe: true } );
-	sea = new THREE.Mesh( geom, material );
+	geom = new THREE.BoxGeometry( FF_DIMENTIONS, FF_DIMENTIONS - 120, FF_DIMENTIONS, 50, 1, 50 );
+
+	materials = [
+		new THREE.MeshStandardMaterial( { color: 0x42abed, wireframe: false, opacity: 0.3, transparent: true } ),
+		new THREE.MeshStandardMaterial( { color: 0x42abed, wireframe: false, opacity: 0.3, transparent: true } ),
+		new THREE.MeshStandardMaterial( { color: 0x42abed, wireframe: false, opacity: 0.8, transparent: true } ), //top
+		new THREE.MeshStandardMaterial( { color: 0x42abed, wireframe: false, opacity: 0.3, transparent: true } ),
+		new THREE.MeshStandardMaterial( { color: 0x42abed, wireframe: false, opacity: 0.3, transparent: true } ),
+		new THREE.MeshStandardMaterial( { color: 0x42abed, wireframe: false, opacity: 0.3, transparent: true } ),
+	]
+	sea = new THREE.Mesh( geom, materials );
+	// sea.castShadow = true;
+	// sea.receiveShadow = true;
+	console.log(sea);
 	// sea.rotation.x = Math.PI / -2;
 	// sea.position.set(0, FF_DIMENTIONS / 2 - 50, 0);
 	scene.add( sea );
@@ -32,7 +43,7 @@ export const update = () => {
 	// });
 
 	topVerts.forEach((i) => {
-		geom.vertices[i].y = FF_DIMENTIONS / 2 + lookupFlowField(geom.vertices[i]).length() * 200;
+		geom.vertices[i].y = FF_DIMENTIONS / 2 + lookupFlowField(geom.vertices[i]).length() * 300;
 	});
 
 	geom.verticesNeedUpdate = true;
