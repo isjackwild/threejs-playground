@@ -5,6 +5,7 @@ import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
 import { update as updateFlowField, lookup as lookupFlowField } from './flow-field.js';
 import { init as initSea, update as updateSea } from './sea.js';
+import { init as initDust, update as updateDust } from './dust.js';
 import { init as initInput } from './input-handler.js';
 import { init as initFlowField } from './flow-field.js';
 import { Fish } from './fish.js';
@@ -26,14 +27,15 @@ export const init = () => {
 	initScene();
 	initInput();
 	initSea();
+	initDust();
 	stats = new Stats();
 	document.body.appendChild(stats.dom);
 	// initFlowField();
 
 	for (let i = 0; i < 50; i++) {
-		const x = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
-		const y = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
-		const z = Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2;
+		const x = Math.random() * FF_DIMENTIONS.x - FF_DIMENTIONS.x / 2;
+		const y = Math.random() * FF_DIMENTIONS.y - FF_DIMENTIONS.y / 2;
+		const z = Math.random() * FF_DIMENTIONS.z - FF_DIMENTIONS.z / 2;
 		fishes.push(Fish(new THREE.Vector3(x, y, z)));
 	}
 
@@ -42,9 +44,9 @@ export const init = () => {
 	const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 	target = new THREE.Mesh( geom, material );
 	target.position.set(
-		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
-		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
-		Math.random() * FF_DIMENTIONS - FF_DIMENTIONS / 2,
+		Math.random() * FF_DIMENTIONS.x - FF_DIMENTIONS.x / 2,
+		Math.random() * FF_DIMENTIONS.y - FF_DIMENTIONS.y / 2,
+		Math.random() * FF_DIMENTIONS.z - FF_DIMENTIONS.z / 2,
 	);
 	// scene.add( target );
 
@@ -84,9 +86,10 @@ const update = (delta) => {
 	});
 	updateFlowField(delta);
 	updateControls(delta);
-	updateSea();
+	updateSea(delta);
+	updateDust(delta);
 
-	target.position.copy(lookupFlowField({ x: 0, y: 0, z: 0 })).multiplyScalar(FF_DIMENTIONS / 3);
+	target.position.copy(lookupFlowField({ x: 0, y: 0, z: 0 })).multiplyScalar(FF_DIMENTIONS.y / 3);
 
 	stats.update();
 }

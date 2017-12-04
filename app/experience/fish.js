@@ -90,7 +90,6 @@ export const Fish = (initPos = new THREE.Vector3()) => {
 
 	const applyBehaviors = (target, siblings) => {
 		applyForce(seek(target).multiplyScalar(0.5));
-
 		applyForce(align(siblings).multiplyScalar(0.8));
 		applyForce(cohese(siblings).multiplyScalar(0.3));
 		applyForce(seperate(siblings).multiplyScalar(1.5));
@@ -104,11 +103,13 @@ export const Fish = (initPos = new THREE.Vector3()) => {
 		acc.multiplyScalar(correction);
 		vel.add(acc);
 		vel.clampLength(0, FISH_MAX_VEL);
-		pos.add(vel);
-		pos.clampScalar(-FF_DIMENTIONS / 2, FF_DIMENTIONS / 2);
 
 		mesh.position.copy(pos);
-		mesh.lookAt(tmp.copy(pos).add(vel));
+		mesh.lookAt(tmp.copy(pos).add(tmp2.copy(vel).normalize()));
+		
+		pos.add(vel);
+		pos.clampScalar(-FF_DIMENTIONS.y / 2, FF_DIMENTIONS.y / 2);
+
 		acc.set(0, 0, 0);
 	}
 
