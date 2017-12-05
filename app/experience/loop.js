@@ -21,34 +21,37 @@ export const init = () => {
 	currentScene = scene;
 	now = new Date().getTime();
 	animate();
-}
+};
 
 export const kill = () => {
 	cancelAnimationFrame(raf);
-}
+};
 
 const setupRenderer = () => {
 	renderer = new THREE.WebGLRenderer({
 		canvas,
 		antialias: true,
 	});
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	console.log(renderer);
 	renderer.setClearColor(0x000000);
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
-}
+};
 
 export const onResize = (w, h) => {
 	if (renderer) renderer.setSize(w, h);
-}
+};
 
 const update = (delta) => {
 	updateScene(delta);
 	updateControls(delta);
-}
+};
 
 const render = () => {
 	renderer.render(currentScene, currentCamera);
-}
+};
 
 const animate = () => {
 	then = now ? now : null;
@@ -58,4 +61,4 @@ const animate = () => {
 	update(delta);
 	render();
 	raf = requestAnimationFrame(animate);
-}
+};

@@ -14,7 +14,7 @@ const kickIt = () => {
 	addEventListeners();
 	onResize();
 	initLoop();
-}
+};
 
 const onResize = () => {
 	window.app.width = window.innerWidth;
@@ -22,7 +22,7 @@ const onResize = () => {
 
 	onResizeRenderer(window.app.width, window.app.height);
 	onResizeCamera(window.app.width, window.app.height);
-}
+};
 
 const addEventListeners = () => {
 	window.addEventListener('resize', _.throttle(onResize, 16.666));
@@ -33,4 +33,4 @@ if (document.addEventListener) {
 	document.addEventListener('DOMContentLoaded', kickIt);
 } else {
 	window.attachEvent('onload', kickIt);
-}
+};
