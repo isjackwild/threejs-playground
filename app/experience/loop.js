@@ -35,7 +35,7 @@ const setupRenderer = () => {
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	console.log(renderer);
-	renderer.setClearColor(0x000000);
+	renderer.setClearColor(0x3f5972);
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
 };

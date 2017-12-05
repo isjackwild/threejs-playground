@@ -8,8 +8,8 @@ let controls;
 export const init = () => {
 	controls = new THREE.OrbitControls(camera);
 	controls.target.set(
-		camera.position.x,
-		camera.position.y,
+		0,
+		155,
 		0,
 	);
 	window.addEventListener('deviceorientation', setOrientationControls, true);
