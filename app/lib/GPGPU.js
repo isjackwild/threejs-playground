@@ -13,7 +13,7 @@ var GPGPU = function ( renderer ) {
 	scene.add( mesh );
 
 	this.pass = function ( material, renderTarget ) {
-
+		console.log(material, '<<');
 		mesh.material = material;
 		renderer.render( scene, camera, renderTarget, false );
 	};

@@ -77,7 +77,6 @@ const InstancedParticles = () => {
 
 			// vec2 uv = position.xy + vec2( size, 1.0 );
 			vec2 uv = vec2(1.0, 1.0);
-			// vec2 uv = off.xy;
 			
 			vec4 data = texture2D( positionTexture, uv );
 			vec3 particlePosition = data.xyz * 1000.0;
@@ -119,7 +118,7 @@ const InstancedParticles = () => {
 			data[stride + 3] = 0;
 		}
 
-		const originsTexture = new THREE.DataTexture(data, SIZE, SIZE, THREE.RGBAFormat);
+		const originsTexture = new THREE.DataTexture(data, SIZE, SIZE);
 		originsTexture.minFilter = THREE.NearestFilter;
 		originsTexture.magFilter = THREE.NearestFilter;
 		originsTexture.generateMipmaps = false;
@@ -129,7 +128,7 @@ const InstancedParticles = () => {
 			minFilter: THREE.NearestFilter,
 			magFilter: THREE.NearestFilter,
 			format: THREE.RGBAFormat,
-			type: THREE.FloatType,
+			type: THREE.UnsignedByteType,
 			depthBuffer: false,
 			stencilBuffer: false,
 		});
@@ -137,8 +136,10 @@ const InstancedParticles = () => {
 		const renderTexture2 = renderTexture1.clone();
 		const copyShader = new GPGPU.CopyShader();
 
-		gpgpu.pass(copyShader.setTexture(originsTexture), renderTexture1);
+		gpgpu.pass(copyShader.setTexture(originsTexture).material, renderTexture1);
 
+		console.log(copyShader.setTexture(originsTexture));
+		return renderTexture1.texture;
 		return originsTexture;
 	};
 
