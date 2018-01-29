@@ -7,6 +7,7 @@ const InstancedParticles = () => {
 	const INSTANCES = SIZE * SIZE;
 	const positions = [];
 	const offsets = [];
+	const uvs = [];
 	const orientationsStart = [];
 	const orientationsEnd = [];
 
@@ -29,7 +30,14 @@ const InstancedParticles = () => {
 
 		tmpV4.set( Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1 ).normalize();
 		orientationsEnd.push( tmpV4.x, tmpV4.y, tmpV4.z, tmpV4.w );
+
+		const u = (i % SIZE) / SIZE;
+		const v = (Math.floor(i / SIZE)) / SIZE;
+		uvs.push(u, v);
 	}
+
+	console.log(uvs);
+
 
 	const vertexSimulationShader = `
 		precision highp float;
@@ -58,6 +66,7 @@ const InstancedParticles = () => {
 		uniform mat4 modelViewMatrix;
 		uniform mat4 projectionMatrix;
 
+		attribute vec2 uv;
 		attribute vec3 position;
 		attribute vec3 offset;
 		attribute vec3 particlePosition;
@@ -74,17 +83,14 @@ const InstancedParticles = () => {
 			// vec4 orientation = vec4(.0, .0, .0, .0);
 			vec3 vcV = cross( orientation.xyz, vPosition );
 			vPosition = vcV * ( 2.0 * orientation.w ) + ( cross( orientation.xyz, vcV ) * 2.0 + vPosition );
-
-			// vec2 uv = position.xy + vec2( size, 1.0 );
-			vec2 uv = vec2(1.0, 1.0);
 			
 			vec4 data = texture2D( positionTexture, uv );
-			vec3 particlePosition = data.xyz * 1000.0;
+			vec3 particlePosition = (data.xyz - 0.5) * 1000.0;
 
-			// vColor = data.xyz;
-			vColor = color;
+			vColor = data.xyz;
+			// vColor = color;
 
-			gl_Position = projectionMatrix * modelViewMatrix * vec4( offset + vPosition + particlePosition, 1.0 );
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(  vPosition + particlePosition, 1.0 );
 		}
 	`;
 
@@ -108,14 +114,11 @@ const InstancedParticles = () => {
 
 		for (let i = 0; i < data.length; i++) {
 			const stride = i * 4;
-			// data[stride] = (Math.random() - 0.5) * 255;
-			// data[stride + 1] = (Math.random() - 0.5) * 255;
-			// data[stride + 2] = (Math.random() - 0.5) * 255;
-			// data[stride + 3] = 0.0;
-			data[stride] = Math.floor(Math.random() * 255);
-			data[stride + 1] = Math.floor(Math.random() * 255);
-			data[stride + 2] = Math.floor(Math.random() * 255);
-			data[stride + 3] = 0;
+
+			data[stride] = Math.random() * 255;
+			data[stride + 1] = Math.random() * 255;
+			data[stride + 2] = Math.random() * 255;
+			data[stride + 3] = 1;
 		}
 
 		const originsTexture = new THREE.DataTexture(data, SIZE, SIZE);
@@ -138,7 +141,6 @@ const InstancedParticles = () => {
 
 		gpgpu.pass(copyShader.setTexture(originsTexture).material, renderTexture1);
 
-		console.log(copyShader.setTexture(originsTexture));
 		return renderTexture1.texture;
 		return originsTexture;
 	};
@@ -151,6 +153,7 @@ const InstancedParticles = () => {
 		geometry.maxInstancedCount = INSTANCES;
 
 		geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+		geometry.addAttribute( 'uv', new THREE.InstancedBufferAttribute( new Float32Array( uvs ), 2 ) );
 		geometry.addAttribute( 'offset', new THREE.InstancedBufferAttribute( new Float32Array( offsets ), 3 ) );
 		geometry.addAttribute( 'orientationStart', new THREE.InstancedBufferAttribute( new Float32Array( orientationsStart ), 4 ) );
 		geometry.addAttribute( 'orientationEnd', new THREE.InstancedBufferAttribute( new Float32Array( orientationsEnd ), 4 ) );
