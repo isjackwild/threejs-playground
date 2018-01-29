@@ -15,7 +15,7 @@ export const init = () => {
 	initCamera();
 	initControls();
 	initScene();
-	initInput();
+	// initInput();
 
 	currentCamera = camera;
 	currentScene = scene;
