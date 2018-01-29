@@ -3,6 +3,8 @@ import GPGPU from '../lib/GPGPU';
 import { renderer } from './loop';
 
 const InstancedParticles = () => {
+	const gpgpu = new GPGPU(renderer);
+
 	const SIZE = 32;
 	const INSTANCES = SIZE * SIZE;
 	const positions = [];
@@ -17,7 +19,8 @@ const InstancedParticles = () => {
 
 	const tmpV4 = new THREE.Vector4();
 	let mesh, geometry;
-	let positionSimulationTexture;
+	let frame = 0;
+	let renderTexture1, renderTexture2, originsTexture, simulationMaterial;
 
 	for (let i = 0; i < INSTANCES; i++) {
 		const oX = (Math.random() - 0.5) * 1000;
@@ -36,30 +39,52 @@ const InstancedParticles = () => {
 		uvs.push(u, v);
 	}
 
-	console.log(uvs);
-
-
 	const vertexSimulationShader = `
-		precision highp float;
+		varying vec2 vUv;
 
 		void main() {
-			gl_Position vec4(.0, .0, .0, .0);
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 		}
 	`;
 
+	// 'varying vec2 vUv;',
+	// 'uniform sampler2D texture;',
+
+	// 'void main() {',
+	// '	gl_FragColor = texture2D( texture, vUv );',
+	// '}'
+
 	const fragmentSimulationShader = `
-		precision highp float;
+		uniform sampler2D tPositions;
+		uniform sampler2D tOrigins;
+		varying vec2 vUv;
+
 
 		void main() {
-			gl_FragColor = vec4(1.0);
+
+			vec4 pos = texture2D( tOrigins, vUv );
+
+			// if ( pos.w < 0.0 ) {
+
+			// 	vec4 sample = texture2D( tOrigins, vUv );
+			// 	pos.xyz = sample.xyz;
+			// 	pos.w = sample.w;
+
+			// } else {
+
+			// 	pos.w -= 0.001;
+
+			// }
+
+			gl_FragColor = texture2D(tOrigins, vUv);
+
 		}
 	`;
 
 	const vertexShader = `
 		precision highp float;
 
-		uniform float size;
-		uniform float sineTime;
 		uniform vec3 color;
 		uniform sampler2D positionTexture;
 
@@ -79,7 +104,7 @@ const InstancedParticles = () => {
 
 		void main(){
 			vPosition = position;
-			vec4 orientation = normalize( mix( orientationStart, orientationEnd, sineTime ) );
+			vec4 orientation = normalize( orientationStart );
 			// vec4 orientation = vec4(.0, .0, .0, .0);
 			vec3 vcV = cross( orientation.xyz, vPosition );
 			vPosition = vcV * ( 2.0 * orientation.w ) + ( cross( orientation.xyz, vcV ) * 2.0 + vPosition );
@@ -108,8 +133,7 @@ const InstancedParticles = () => {
 		}
 	`;
 
-	const createSimulationTexture = () => {
-		const gpgpu = new GPGPU( renderer );
+	const createSimulationTextures = () => {
 		const data = new Uint8Array(4 * INSTANCES);
 
 		for (let i = 0; i < data.length; i++) {
@@ -140,12 +164,20 @@ const InstancedParticles = () => {
 		const copyShader = new GPGPU.CopyShader();
 
 		gpgpu.pass(copyShader.setTexture(originsTexture).material, renderTexture1);
+		gpgpu.pass(copyShader.setTexture(renderTexture1).material, renderTexture2);
 
-		return renderTexture1.texture;
-		return originsTexture;
+		return { renderTexture1, renderTexture2, originsTexture };
 	};
 
-	const createSimulationMaterial = () => {
+	const createSimulationMaterial = (originsTexture, positionsTexture) => {
+		const simulationMaterial = new THREE.ShaderMaterial({
+			uniforms: {
+				tPositions: { type: 't', value: positionsTexture },
+				tOrigins: { type: 't', value: originsTexture },
+			},
+		});
+
+		return simulationMaterial;
 	};
 
 	const createGeometry = () => {
@@ -163,13 +195,10 @@ const InstancedParticles = () => {
 
 	const createMesh = (geometry, positionSimulationTexture) => {
 		const uniforms = {
-			size: { value: 1.0 },
 			color: {
 				type: 'c',
 				value: new THREE.Color(0x3db230),
 			},
-			time: { value: 1.0 },
-			sineTime: { value: 1.0 },
 			positionTexture: {
 				type: 't',
 				value: positionSimulationTexture,
@@ -189,20 +218,32 @@ const InstancedParticles = () => {
 
 
 	const update = () => {
-		const time = Date.now();
-		mesh.material.uniforms.time.value = time * 0.005;
-		mesh.material.uniforms.sineTime.value = Math.sin(mesh.material.uniforms.time.value * 0.05);
+		return;
+		if (frame % 2 === 0) {
+			simulationMaterial.uniforms.tPositions.value = renderTexture1;
+			gpgpu.pass(simulationMaterial, renderTexture2);
+			mesh.material.uniforms.positionTexture.value = renderTexture2;
+		} else {
+			simulationMaterial.uniforms.tPositions.value = renderTexture2;
+			gpgpu.pass(simulationMaterial, renderTexture1);
+			mesh.material.uniforms.positionTexture.value = renderTexture1;
+		}
+		simulationMaterial.needsUpdate = true;
+		frame++;
 	};
 
-	positionSimulationTexture = createSimulationTexture();
-	geometry = createGeometry();
-	mesh = createMesh(geometry, positionSimulationTexture);
+	const simTextures = createSimulationTextures();
+	renderTexture1 = simTextures.renderTexture1;
+	renderTexture2 = simTextures.renderTexture2;
+	originsTexture = simTextures.originsTexture;
 
-	console.log(positionSimulationTexture);
+	simulationMaterial = createSimulationMaterial(originsTexture, renderTexture1);
+	geometry = createGeometry();
+	mesh = createMesh(geometry, renderTexture1);
 
 	const debugMesh = new THREE.Mesh(
 		new THREE.PlaneGeometry( 512, 512 ),
-		new THREE.MeshBasicMaterial({ map: positionSimulationTexture, side: THREE.DoubleSide }),
+		new THREE.MeshBasicMaterial({ map: renderTexture2, side: THREE.DoubleSide }),
 		// new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 	);
 	mesh.add(debugMesh);
