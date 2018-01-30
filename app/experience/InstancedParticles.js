@@ -20,7 +20,7 @@ const InstancedParticles = () => {
 	const tmpV4 = new THREE.Vector4();
 	let mesh, geometry;
 	let frame = 0;
-	let renderTexture1, renderTexture2, originsTexture, simulationMaterial;
+	let renderTarget1, renderTarget2, originsTexture, simulationMaterial;
 
 	for (let i = 0; i < INSTANCES; i++) {
 		const oX = (Math.random() - 0.5) * 1000;
@@ -40,45 +40,56 @@ const InstancedParticles = () => {
 	}
 
 	const vertexSimulationShader = `
+		uniform float uTime;
+
 		varying vec2 vUv;
+		varying float vTime;
 
 		void main() {
 			vUv = uv;
+			vTime = uTime;
+
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 		}
 	`;
 
-	// 'varying vec2 vUv;',
-	// 'uniform sampler2D texture;',
-
-	// 'void main() {',
-	// '	gl_FragColor = texture2D( texture, vUv );',
-	// '}'
-
 	const fragmentSimulationShader = `
+		precision highp float;
+
 		uniform sampler2D tPositions;
 		uniform sampler2D tOrigins;
 		varying vec2 vUv;
+		varying float vTime;
 
+		float rand(vec2 co){
+		    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+		}
 
 		void main() {
 
-			vec4 pos = texture2D( tOrigins, vUv );
+			vec4 pos = texture2D( tPositions, vUv );
+			pos.xyz -= 0.005;
+
+			if (pos.x < 0.0) {
+				pos.x = 1.0;
+			}
+			if (pos.y < 0.0) {
+				pos.y = 1.0;
+			}
+			if (pos.z < 0.0) {
+				pos.z = 1.0;
+			}
 
 			// if ( pos.w < 0.0 ) {
-
 			// 	vec4 sample = texture2D( tOrigins, vUv );
 			// 	pos.xyz = sample.xyz;
-			// 	pos.w = sample.w;
-
+			// 	pos.w = 1.0;
 			// } else {
-
 			// 	pos.w -= 0.001;
-
 			// }
 
-			gl_FragColor = texture2D(tOrigins, vUv);
-
+			// gl_FragColor = vec4(rand(vec2(vTime * 0.0001)), rand(vec2(vTime * 0.00001)), rand(vec2(vTime * 0.000001)), 1.0);
+			gl_FragColor = vec4(pos.xyz, 1.0);
 		}
 	`;
 
@@ -86,7 +97,7 @@ const InstancedParticles = () => {
 		precision highp float;
 
 		uniform vec3 color;
-		uniform sampler2D positionTexture;
+		uniform sampler2D tPositions;
 
 		uniform mat4 modelViewMatrix;
 		uniform mat4 projectionMatrix;
@@ -109,7 +120,7 @@ const InstancedParticles = () => {
 			vec3 vcV = cross( orientation.xyz, vPosition );
 			vPosition = vcV * ( 2.0 * orientation.w ) + ( cross( orientation.xyz, vcV ) * 2.0 + vPosition );
 			
-			vec4 data = texture2D( positionTexture, uv );
+			vec4 data = texture2D( tPositions, uv );
 			vec3 particlePosition = (data.xyz - 0.5) * 1000.0;
 
 			vColor = data.xyz;
@@ -151,7 +162,7 @@ const InstancedParticles = () => {
 		originsTexture.generateMipmaps = false;
 		originsTexture.needsUpdate = true;
 
-		const renderTexture1 = new THREE.WebGLRenderTarget(SIZE, SIZE, {
+		const renderTarget1 = new THREE.WebGLRenderTarget(SIZE, SIZE, {
 			minFilter: THREE.NearestFilter,
 			magFilter: THREE.NearestFilter,
 			format: THREE.RGBAFormat,
@@ -160,13 +171,12 @@ const InstancedParticles = () => {
 			stencilBuffer: false,
 		});
 
-		const renderTexture2 = renderTexture1.clone();
+		const renderTarget2 = renderTarget1.clone();
 		const copyShader = new GPGPU.CopyShader();
 
-		gpgpu.pass(copyShader.setTexture(originsTexture).material, renderTexture1);
-		gpgpu.pass(copyShader.setTexture(renderTexture1).material, renderTexture2);
+		gpgpu.pass(copyShader.setTexture(originsTexture).material, renderTarget1);
 
-		return { renderTexture1, renderTexture2, originsTexture };
+		return { renderTarget1, renderTarget2, originsTexture };
 	};
 
 	const createSimulationMaterial = (originsTexture, positionsTexture) => {
@@ -174,7 +184,10 @@ const InstancedParticles = () => {
 			uniforms: {
 				tPositions: { type: 't', value: positionsTexture },
 				tOrigins: { type: 't', value: originsTexture },
+				uTime: { value: 0 },
 			},
+			vertexShader: vertexSimulationShader,
+			fragmentShader: fragmentSimulationShader,
 		});
 
 		return simulationMaterial;
@@ -195,11 +208,14 @@ const InstancedParticles = () => {
 
 	const createMesh = (geometry, positionSimulationTexture) => {
 		const uniforms = {
+			uTime: {
+				value: 0,
+			},
 			color: {
 				type: 'c',
 				value: new THREE.Color(0x3db230),
 			},
-			positionTexture: {
+			tPositions: {
 				type: 't',
 				value: positionSimulationTexture,
 			},
@@ -218,32 +234,37 @@ const InstancedParticles = () => {
 
 
 	const update = () => {
-		return;
-		if (frame % 2 === 0) {
-			simulationMaterial.uniforms.tPositions.value = renderTexture1;
-			gpgpu.pass(simulationMaterial, renderTexture2);
-			mesh.material.uniforms.positionTexture.value = renderTexture2;
-		} else {
-			simulationMaterial.uniforms.tPositions.value = renderTexture2;
-			gpgpu.pass(simulationMaterial, renderTexture1);
-			mesh.material.uniforms.positionTexture.value = renderTexture1;
-		}
 		simulationMaterial.needsUpdate = true;
+		simulationMaterial.uniforms.uTime.value = Date.now();
+
+		if (frame % 2 === 0) {
+			simulationMaterial.uniforms.tPositions.value = renderTarget1.texture;
+			gpgpu.pass(simulationMaterial, renderTarget2);
+			mesh.material.uniforms.tPositions.value = renderTarget2.texture;
+		} else {
+			simulationMaterial.uniforms.tPositions.value = renderTarget2.texture;
+			gpgpu.pass(simulationMaterial, renderTarget1);
+			mesh.material.uniforms.tPositions.value = renderTarget1.texture;
+		}
+		mesh.material.needsUpdate = true;
+
 		frame++;
 	};
 
 	const simTextures = createSimulationTextures();
-	renderTexture1 = simTextures.renderTexture1;
-	renderTexture2 = simTextures.renderTexture2;
+	renderTarget1 = simTextures.renderTarget1;
+	renderTarget2 = simTextures.renderTarget2;
 	originsTexture = simTextures.originsTexture;
 
-	simulationMaterial = createSimulationMaterial(originsTexture, renderTexture1);
+	console.log(renderTarget1, renderTarget2, originsTexture);
+
+	simulationMaterial = createSimulationMaterial(originsTexture, renderTarget1);
 	geometry = createGeometry();
-	mesh = createMesh(geometry, renderTexture1);
+	mesh = createMesh(geometry, renderTarget1);
 
 	const debugMesh = new THREE.Mesh(
 		new THREE.PlaneGeometry( 512, 512 ),
-		new THREE.MeshBasicMaterial({ map: renderTexture2, side: THREE.DoubleSide }),
+		new THREE.MeshBasicMaterial({ map: renderTarget2.texture, side: THREE.DoubleSide, transparent: true }),
 		// new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 	);
 	mesh.add(debugMesh);
