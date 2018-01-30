@@ -40,14 +40,10 @@ const InstancedParticles = () => {
 	}
 
 	const vertexSimulationShader = `
-		uniform float uTime;
-
 		varying vec2 vUv;
-		varying float vTime;
 
 		void main() {
 			vUv = uv;
-			vTime = uTime;
 
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 		}
@@ -58,37 +54,48 @@ const InstancedParticles = () => {
 
 		uniform sampler2D tPositions;
 		uniform sampler2D tOrigins;
+		uniform sampler2D tPerlin;
 		varying vec2 vUv;
-		varying float vTime;
 
-		float rand(vec2 co){
-		    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-		}
+		uniform float uTime;
+
+		float NOISE_SCALE = 1.0;
+		float WIND_STRENGTH = 0.02;
+		float NOISE_SPEED = 0.001;
+
+		// void main() {
+
+		// 	vec4 pos = texture2D(tPositions, vUv);
+
+		// 	vec2 lookUp = (pos.xy * NOISE_SCALE);
+		// 	lookUp = fract(lookUp);
+
+		// 	vec4 noise = texture2D(tPerlin, lookUp);
+		// 	pos.xyz += (noise.xyz - 0.5) * (WIND_STRENGTH * 2.0);
+		// 	pos = fract(pos);
+
+		// 	// if (pos.x < 0.0) pos.x = 1.0;
+		// 	// if (pos.y < 0.0) pos.y = 1.0;
+		// 	// if (pos.z < 0.0) pos.z = 1.0;
+
+		// 	// if (pos.x > 1.0) pos.x = 0.0;
+		// 	// if (pos.y > 1.0) pos.y = 0.0;
+		// 	// if (pos.z > 1.0) pos.z = 0.0;
+
+		// 	gl_FragColor = vec4(pos.xyz, 1.0);
+		// }
 
 		void main() {
+			vec4 pos = texture2D(tPositions, vUv);
+			
+			vec2 lookUp = vec2(0.0, 1.0);
+			vec3 noise = texture2D(tPerlin, lookUp).rgb - 0.5;
 
-			vec4 pos = texture2D( tPositions, vUv );
-			pos.xyz -= 0.005;
+			vec3 GRAVITY = vec3(0.0, noise.r * 0.01, 0.0);
+			
+			pos += vec4(GRAVITY, 0.0);
+			pos = fract(pos);
 
-			if (pos.x < 0.0) {
-				pos.x = 1.0;
-			}
-			if (pos.y < 0.0) {
-				pos.y = 1.0;
-			}
-			if (pos.z < 0.0) {
-				pos.z = 1.0;
-			}
-
-			// if ( pos.w < 0.0 ) {
-			// 	vec4 sample = texture2D( tOrigins, vUv );
-			// 	pos.xyz = sample.xyz;
-			// 	pos.w = 1.0;
-			// } else {
-			// 	pos.w -= 0.001;
-			// }
-
-			// gl_FragColor = vec4(rand(vec2(vTime * 0.0001)), rand(vec2(vTime * 0.00001)), rand(vec2(vTime * 0.000001)), 1.0);
 			gl_FragColor = vec4(pos.xyz, 1.0);
 		}
 	`;
@@ -116,7 +123,6 @@ const InstancedParticles = () => {
 		void main(){
 			vPosition = position;
 			vec4 orientation = normalize( orientationStart );
-			// vec4 orientation = vec4(.0, .0, .0, .0);
 			vec3 vcV = cross( orientation.xyz, vPosition );
 			vPosition = vcV * ( 2.0 * orientation.w ) + ( cross( orientation.xyz, vcV ) * 2.0 + vPosition );
 			
@@ -124,7 +130,6 @@ const InstancedParticles = () => {
 			vec3 particlePosition = (data.xyz - 0.5) * 1000.0;
 
 			vColor = data.xyz;
-			// vColor = color;
 
 			gl_Position = projectionMatrix * modelViewMatrix * vec4(  vPosition + particlePosition, 1.0 );
 		}
@@ -175,19 +180,26 @@ const InstancedParticles = () => {
 		const copyShader = new GPGPU.CopyShader();
 
 		gpgpu.pass(copyShader.setTexture(originsTexture).material, renderTarget1);
+		const perlinTexture = new THREE.TextureLoader().load('/assets/textures/100-0-512.png');
+		perlinTexture.minFilter = perlinTexture.magFilter = THREE.NearestFilter;
 
-		return { renderTarget1, renderTarget2, originsTexture };
+		console.log(perlinTexture);
+
+		return { renderTarget1, renderTarget2, originsTexture, perlinTexture };
 	};
 
-	const createSimulationMaterial = (originsTexture, positionsTexture) => {
+	const createSimulationMaterial = (originsTexture, positionsTexture, perlinTexture) => {
 		const simulationMaterial = new THREE.ShaderMaterial({
 			uniforms: {
 				tPositions: { type: 't', value: positionsTexture },
 				tOrigins: { type: 't', value: originsTexture },
+				tPerlin: { type: 't', value: perlinTexture },
 				uTime: { value: 0 },
 			},
 			vertexShader: vertexSimulationShader,
 			fragmentShader: fragmentSimulationShader,
+			side: THREE.DoubleSide,
+			transparent: true,
 		});
 
 		return simulationMaterial;
@@ -208,17 +220,9 @@ const InstancedParticles = () => {
 
 	const createMesh = (geometry, positionSimulationTexture) => {
 		const uniforms = {
-			uTime: {
-				value: 0,
-			},
-			color: {
-				type: 'c',
-				value: new THREE.Color(0x3db230),
-			},
-			tPositions: {
-				type: 't',
-				value: positionSimulationTexture,
-			},
+			uTime: { value: 0 },
+			color: { type: 'c', value: new THREE.Color(0x3db230) },
+			tPositions: { type: 't', value: positionSimulationTexture },
 		};
 
 		const material = new THREE.RawShaderMaterial({
@@ -255,16 +259,15 @@ const InstancedParticles = () => {
 	renderTarget1 = simTextures.renderTarget1;
 	renderTarget2 = simTextures.renderTarget2;
 	originsTexture = simTextures.originsTexture;
+	const perlinTexture = simTextures.perlinTexture;
 
-	console.log(renderTarget1, renderTarget2, originsTexture);
-
-	simulationMaterial = createSimulationMaterial(originsTexture, renderTarget1);
+	simulationMaterial = createSimulationMaterial(originsTexture, renderTarget1, perlinTexture);
 	geometry = createGeometry();
 	mesh = createMesh(geometry, renderTarget1);
 
 	const debugMesh = new THREE.Mesh(
 		new THREE.PlaneGeometry( 512, 512 ),
-		new THREE.MeshBasicMaterial({ map: renderTarget2.texture, side: THREE.DoubleSide, transparent: true }),
+		new THREE.MeshBasicMaterial({ map: perlinTexture, side: THREE.DoubleSide, transparent: true }),
 		// new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 	);
 	mesh.add(debugMesh);
