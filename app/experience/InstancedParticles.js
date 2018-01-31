@@ -12,6 +12,7 @@ const InstancedParticles = () => {
 	const uvs = [];
 	const orientationsStart = [];
 	const orientationsEnd = [];
+	const startTime = Date.now();
 
 	positions.push( 5, -5, 0 );
 	positions.push( -5, 5, 0 );
@@ -56,8 +57,10 @@ const InstancedParticles = () => {
 		uniform sampler2D tOrigins;
 		uniform sampler2D tPerlin;
 		varying vec2 vUv;
+		varying vec3 vColor;
 
 		uniform float uTime;
+		uniform float uStartTime;
 
 		float NOISE_SCALE = 1.0;
 		float WIND_STRENGTH = 0.02;
@@ -86,17 +89,19 @@ const InstancedParticles = () => {
 		// }
 
 		void main() {
+			float timePassed = (uTime - uStartTime) / 1000.0 * 0.1;
 			vec4 pos = texture2D(tPositions, vUv);
 			
-			vec2 lookUp = vec2(0.0, 1.0);
+			vec2 lookUp = vec2(0.0, 0.0);
 			vec3 noise = texture2D(tPerlin, lookUp).rgb - 0.5;
 
-			vec3 GRAVITY = vec3(0.0, noise.r * 0.01, 0.0);
+			vec3 GRAVITY = vec3(0.0, noise.r * 0.1, 0.0);
 			
 			pos += vec4(GRAVITY, 0.0);
 			pos = fract(pos);
 
 			gl_FragColor = vec4(pos.xyz, 1.0);
+			// gl_FragColor = vec4(timePassed, timePassed, timePassed, 1.0);
 		}
 	`;
 
@@ -119,7 +124,6 @@ const InstancedParticles = () => {
 		varying vec3 vPosition;
 		varying vec3 vColor;
 
-
 		void main(){
 			vPosition = position;
 			vec4 orientation = normalize( orientationStart );
@@ -138,14 +142,21 @@ const InstancedParticles = () => {
 	const fragmentShader = `
 		precision highp float;
 
-		uniform float time;
+		uniform float uTime;
+		uniform float uStartTime;
+		uniform float uBlah;
 
 		varying vec3 vPosition;
 		varying vec3 vColor;
 
-		void main() {
-			gl_FragColor = vec4(vColor, 1.0);
+		float TIME_TRANSITION = 10000.0;
 
+		void main() {
+			float timePassed = uTime - uStartTime;
+			// float timePassed = 5000.0;
+			float val = timePassed / TIME_TRANSITION;
+
+			gl_FragColor = vec4(fract(uBlah), fract(uBlah), fract(uBlah), 1.0);
 		}
 	`;
 
@@ -180,7 +191,7 @@ const InstancedParticles = () => {
 		const copyShader = new GPGPU.CopyShader();
 
 		gpgpu.pass(copyShader.setTexture(originsTexture).material, renderTarget1);
-		const perlinTexture = new THREE.TextureLoader().load('/assets/textures/100-0-512.png');
+		const perlinTexture = new THREE.TextureLoader().load('/assets/textures/100-to-0-512.png');
 		perlinTexture.minFilter = perlinTexture.magFilter = THREE.NearestFilter;
 
 		console.log(perlinTexture);
@@ -194,7 +205,8 @@ const InstancedParticles = () => {
 				tPositions: { type: 't', value: positionsTexture },
 				tOrigins: { type: 't', value: originsTexture },
 				tPerlin: { type: 't', value: perlinTexture },
-				uTime: { value: 0 },
+				uTime: { type: 'f', value: 0.0 },
+				uStartTime: { type: 'f', value: parseFloat(Date.now()) },
 			},
 			vertexShader: vertexSimulationShader,
 			fragmentShader: fragmentSimulationShader,
@@ -220,9 +232,11 @@ const InstancedParticles = () => {
 
 	const createMesh = (geometry, positionSimulationTexture) => {
 		const uniforms = {
-			uTime: { value: 0 },
+			uTime: { type: 'f', value: 0 },
+			uStartTime: { type: 'f', value: parseFloat(Date.now()) },
 			color: { type: 'c', value: new THREE.Color(0x3db230) },
 			tPositions: { type: 't', value: positionSimulationTexture },
+			uBlah: { type: 'f', value: 0.0 },
 		};
 
 		const material = new THREE.RawShaderMaterial({
@@ -238,8 +252,15 @@ const InstancedParticles = () => {
 
 
 	const update = () => {
+		const secsPast = (Date.now() - startTime) / 1000;
+
+		simulationMaterial.uniforms.uTime.value = parseFloat(Date.now());
+		mesh.material.uniforms.uTime.value = parseFloat(Date.now());
+		mesh.material.uniforms.uBlah.value = secsPast * 0.1;
 		simulationMaterial.needsUpdate = true;
-		simulationMaterial.uniforms.uTime.value = Date.now();
+		mesh.material.needsUpdate = true;
+		// console.log((simulationMaterial.uniforms.uTime.value - simulationMaterial.uniforms.uStartTime.value) / 1000);
+
 
 		if (frame % 2 === 0) {
 			simulationMaterial.uniforms.tPositions.value = renderTarget1.texture;
@@ -267,7 +288,7 @@ const InstancedParticles = () => {
 
 	const debugMesh = new THREE.Mesh(
 		new THREE.PlaneGeometry( 512, 512 ),
-		new THREE.MeshBasicMaterial({ map: perlinTexture, side: THREE.DoubleSide, transparent: true }),
+		new THREE.MeshBasicMaterial({ map: renderTarget1, side: THREE.DoubleSide, transparent: true }),
 		// new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 	);
 	mesh.add(debugMesh);
