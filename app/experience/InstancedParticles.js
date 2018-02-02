@@ -5,8 +5,8 @@ import { renderer } from './loop';
 const InstancedParticles = () => {
 	const gpgpu = new GPGPU(renderer);
 
-	const SIZE = 32;
-	const INSTANCES = SIZE * SIZE;
+	// const SIZE = 32;
+	const INSTANCES = 20;
 	const positions = [];
 	const offsets = [];
 	const uvs = [];
@@ -14,9 +14,9 @@ const InstancedParticles = () => {
 	const orientationsEnd = [];
 	const startTime = Date.now();
 
-	positions.push( 5, -5, 0 );
-	positions.push( -5, 5, 0 );
-	positions.push( 0, 0, 5 );
+	positions.push( 15, -15, 0 );
+	positions.push( -15, 15, 0 );
+	positions.push( 0, 0, 15 );
 
 	const tmpV4 = new THREE.Vector4();
 	let mesh, geometry;
@@ -35,12 +35,13 @@ const InstancedParticles = () => {
 		tmpV4.set( Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1 ).normalize();
 		orientationsEnd.push( tmpV4.x, tmpV4.y, tmpV4.z, tmpV4.w );
 
-		const u = (i % SIZE) / SIZE;
-		const v = (Math.floor(i / SIZE)) / SIZE;
+		const u = i / INSTANCES;
+		const v = 0.0;
 		uvs.push(u, v);
 	}
 
 	const vertexSimulationShader = `
+		precision highp float;
 		varying vec2 vUv;
 
 		void main() {
@@ -64,11 +65,13 @@ const InstancedParticles = () => {
 		float NOISE_SCALE = 0.3;
 		float WIND_STRENGTH = 0.009;
 		float NOISE_SPEED = 0.08;
+		float MAX_VELOCITY = 0.01;
 
-		vec3 GRAVITY = vec3(0.0, -0.02, 0.0);
+		vec3 GRAVITY = vec3(0.0, -0.01, 0.0);
 
 		void main() {
-			vec4 pos = texture2D(tPositions, vUv);
+			vec3 velocity = texture2D(tPositions, vec2(vUv.x, 1.0)).xyz;
+			vec3 pos = texture2D(tPositions, vec2(vUv.x, 0.0)).xyz;
 
 			float x = fract((pos.x * NOISE_SCALE) + (uTimePassed * NOISE_SPEED) + pos.z);
 			float y = fract((pos.y * NOISE_SCALE) + (uTimePassed * NOISE_SPEED));
@@ -83,23 +86,34 @@ const InstancedParticles = () => {
 			acceleration += GRAVITY;
 			acceleration += wind;
 			acceleration *= weight;
-			
-			pos += vec4(acceleration, 0.0);
+				
+			velocity += acceleration;
 
-			// if (pos.y <= 0.0) pos = texture2D(tOrigins, vUv);
-			if (pos.y <= 0.0) {
-				vec3 origin = texture2D(tOrigins, vUv).xyz;
+			vec3 mappedVelocity = normalize(velocity - 0.5);
+			pos += mappedVelocity * MAX_VELOCITY;
+
+			if (pos.y < 0.0) {
+				vec3 origin = texture2D(tOrigins, vec2(vUv.x, 0.0)).xyz;
 				pos.x = origin.x;
 				pos.y = 1.0;
+				pos.z = origin.z;
+			} else if (pos.y > 1.0) {
+				vec3 origin = texture2D(tOrigins, vec2(vUv.x, 0.0)).xyz;
+				pos.x = origin.x;
+				pos.y = 0.0;
 				pos.z = origin.z;
 			}
 
 			pos.x = fract(pos.x);
 			pos.z = fract(pos.z);
 
-			// pos = fract(pos);
+			if (vUv.y < 0.5) {
+				gl_FragColor = vec4(pos, 1.0);
+			} else {
+				gl_FragColor = vec4(velocity, 1.0);
+			}
 
-			gl_FragColor = vec4(pos.xyz, 1.0);
+
 		}
 	`;
 
@@ -128,7 +142,7 @@ const InstancedParticles = () => {
 			vec3 vcV = cross( orientation.xyz, vPosition );
 			vPosition = vcV * ( 2.0 * orientation.w ) + ( cross( orientation.xyz, vcV ) * 2.0 + vPosition );
 			
-			vec4 data = texture2D( tPositions, uv );
+			vec4 data = texture2D( tPositions, vec2(uv.x, 0.0));
 			vec3 particlePosition = (data.xyz - 0.5) * 1000.0;
 
 			vColor = data.xyz;
@@ -146,29 +160,33 @@ const InstancedParticles = () => {
 		float TIME_TRANSITION = 10000.0;
 
 		void main() {
-			gl_FragColor = vec4(1.0);
+			gl_FragColor = vec4(vColor, 1.0);
 		}
 	`;
 
 	const createSimulationTextures = () => {
-		const data = new Uint8Array(4 * INSTANCES);
+		const data = new Uint8Array(4 * INSTANCES * 2);
 
-		for (let i = 0; i < data.length; i++) {
-			const stride = i * 4;
+		for (let i = 0; i < data.length * 0.5; i += 4) {
+			data[i] = Math.random() * 255;
+			data[i + 1] = Math.random() * 255;
+			data[i + 2] = Math.random() * 255;
+			data[i + 3] = (1 - (Math.random() * 0.3)) * 255; // store the weight in the origin texture
 
-			data[stride] = Math.random() * 255;
-			data[stride + 1] = Math.random() * 255;
-			data[stride + 2] = Math.random() * 255;
-			data[stride + 3] = (1 - (Math.random() * 0.3)) * 255; // store the weight in the origin texture
+
+			data[i + data.length * 0.5] = 127.5;
+			data[i + data.length * 0.5 + 1] = 127.5;
+			data[i + data.length * 0.5 + 2] = 127.5;
+			data[i + data.length * 0.5 + 3] = 127.5;
 		}
 
-		const originsTexture = new THREE.DataTexture(data, SIZE, SIZE, THREE.RGBAFormat);
+		const originsTexture = new THREE.DataTexture(data, INSTANCES, 2, THREE.RGBAFormat);
 		originsTexture.minFilter = THREE.NearestFilter;
 		originsTexture.magFilter = THREE.NearestFilter;
 		originsTexture.generateMipmaps = false;
 		originsTexture.needsUpdate = true;
 
-		const renderTarget1 = new THREE.WebGLRenderTarget(SIZE, SIZE, {
+		const renderTarget1 = new THREE.WebGLRenderTarget(INSTANCES, 2, {
 			minFilter: THREE.NearestFilter,
 			magFilter: THREE.NearestFilter,
 			format: THREE.RGBAFormat,
@@ -269,7 +287,7 @@ const InstancedParticles = () => {
 	mesh = createMesh(geometry, renderTarget1);
 
 	const debugMesh = new THREE.Mesh(
-		new THREE.PlaneGeometry( 512, 512 ),
+		new THREE.PlaneGeometry( 512 * 2, 512 * 0.5 ),
 		new THREE.MeshBasicMaterial({ map: renderTarget1.texture, side: THREE.DoubleSide, transparent: true }),
 		// new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 	);
