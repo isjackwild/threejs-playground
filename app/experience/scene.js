@@ -27,5 +27,5 @@ export const init = () => {
 };
 
 export const update = (delta) => {
-	instancedParticles.update();
+	instancedParticles.update(delta);
 };

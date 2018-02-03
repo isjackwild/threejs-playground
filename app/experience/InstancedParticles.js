@@ -6,7 +6,8 @@ const InstancedParticles = () => {
 	const gpgpu = new GPGPU(renderer);
 
 	// const SIZE = 32;
-	const INSTANCES = 20;
+	const INSTANCES = 10000;
+	const PARTICLE_SIZE = 5;
 	const positions = [];
 	const offsets = [];
 	const uvs = [];
@@ -14,9 +15,9 @@ const InstancedParticles = () => {
 	const orientationsEnd = [];
 	const startTime = Date.now();
 
-	positions.push( 15, -15, 0 );
-	positions.push( -15, 15, 0 );
-	positions.push( 0, 0, 15 );
+	positions.push( PARTICLE_SIZE, -PARTICLE_SIZE, 0 );
+	positions.push( -PARTICLE_SIZE, PARTICLE_SIZE, 0 );
+	positions.push( 0, 0, PARTICLE_SIZE );
 
 	const tmpV4 = new THREE.Vector4();
 	let mesh, geometry;
@@ -41,7 +42,7 @@ const InstancedParticles = () => {
 	}
 
 	const vertexSimulationShader = `
-		precision highp float;
+		precision mediump float;
 		varying vec2 vUv;
 
 		void main() {
@@ -52,7 +53,7 @@ const InstancedParticles = () => {
 	`;
 
 	const fragmentSimulationShader = `
-		precision highp float;
+		precision mediump float;
 
 		uniform sampler2D tPositions;
 		uniform sampler2D tOrigins;
@@ -61,10 +62,11 @@ const InstancedParticles = () => {
 		varying vec3 vColor;
 
 		uniform float uTimePassed;
+		uniform float uCorrection;
 
-		float NOISE_SCALE = 0.3;
-		float WIND_STRENGTH = 0.009;
-		float NOISE_SPEED = 0.08;
+		float NOISE_SCALE = 0.1;
+		float WIND_STRENGTH = 0.012;
+		float NOISE_SPEED = 0.09;
 		float MAX_VELOCITY = 0.01;
 
 		vec3 GRAVITY = vec3(0.0, -0.01, 0.0);
@@ -86,6 +88,7 @@ const InstancedParticles = () => {
 			acceleration += GRAVITY;
 			acceleration += wind;
 			acceleration *= weight;
+			acceleration *= uCorrection;
 				
 			velocity += acceleration;
 
@@ -118,7 +121,7 @@ const InstancedParticles = () => {
 	`;
 
 	const vertexShader = `
-		precision highp float;
+		precision mediump float;
 
 		uniform vec3 color;
 		uniform sampler2D tPositions;
@@ -152,7 +155,7 @@ const InstancedParticles = () => {
 	`;
 
 	const fragmentShader = `
-		precision highp float;
+		precision mediump float;
 
 		varying vec3 vPosition;
 		varying vec3 vColor;
@@ -168,12 +171,15 @@ const InstancedParticles = () => {
 		const data = new Uint8Array(4 * INSTANCES * 2);
 
 		for (let i = 0; i < data.length * 0.5; i += 4) {
+			// POSITION
 			data[i] = Math.random() * 255;
 			data[i + 1] = Math.random() * 255;
 			data[i + 2] = Math.random() * 255;
-			data[i + 3] = (1 - (Math.random() * 0.3)) * 255; // store the weight in the origin texture
+			// data[i + 3] = (1 - (Math.random() * 0.3)) * 255; // store the weight in the origin texture
+			data[i + 3] = 0;
 
 
+			// VELOCITY
 			data[i + data.length * 0.5] = 127.5;
 			data[i + data.length * 0.5 + 1] = 127.5;
 			data[i + data.length * 0.5 + 2] = 127.5;
@@ -191,9 +197,9 @@ const InstancedParticles = () => {
 			magFilter: THREE.NearestFilter,
 			format: THREE.RGBAFormat,
 			type: THREE.UnsignedByteType,
-			depthBuffer: true,
+			depthBuffer: false,
 			stencilBuffer: false,
-			transparent: true,
+			transparent: false,
 		});
 
 		const renderTarget2 = renderTarget1.clone();
@@ -215,6 +221,7 @@ const InstancedParticles = () => {
 				tOrigins: { type: 't', value: originsTexture },
 				tPerlin: { type: 't', value: perlinTexture },
 				uTimePassed: { value: 0.0 },
+				uCorrection: { value: 1.0 },
 			},
 			vertexShader: vertexSimulationShader,
 			fragmentShader: fragmentSimulationShader,
@@ -256,9 +263,10 @@ const InstancedParticles = () => {
 	};
 
 
-	const update = () => {
+	const update = (correction) => {
 		const secsPast = (Date.now() - startTime) / 1000;
 		simulationMaterial.uniforms.uTimePassed.value = secsPast;
+		simulationMaterial.uniforms.uCorrection.value = correction;
 		// console.log((simulationMaterial.uniforms.uTime.value - simulationMaterial.uniforms.uStartTime.value) / 1000);
 
 
@@ -271,7 +279,7 @@ const InstancedParticles = () => {
 			gpgpu.pass(simulationMaterial, renderTarget1);
 			mesh.material.uniforms.tPositions.value = renderTarget1.texture;
 		}
-		mesh.material.needsUpdate = true;
+		// mesh.material.needsUpdate = true;
 
 		frame++;
 	};
@@ -291,7 +299,7 @@ const InstancedParticles = () => {
 		new THREE.MeshBasicMaterial({ map: renderTarget1.texture, side: THREE.DoubleSide, transparent: true }),
 		// new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 	);
-	mesh.add(debugMesh);
+	// mesh.add(debugMesh);
 
 
 	return { mesh, update };

@@ -3,9 +3,10 @@ import { init as initScene, update as updateScene, scene } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
 import { init as initInput } from './input-handler.js';
+import Stats from 'stats-js';
 
 let canvas;
-let raf, then, now, delta;
+let raf, then, now, delta, stats;
 let currentCamera, currentScene;
 export let renderer;
 
@@ -15,6 +16,13 @@ export const init = () => {
 	initCamera();
 	initControls();
 	initScene();
+
+	stats = new Stats();
+	stats.setMode(0); // 0: fps, 1: ms 
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.left = '0px';
+	stats.domElement.style.top = '0px';
+	document.body.appendChild(stats.domElement);
 	// initInput();
 
 	currentCamera = camera;
@@ -51,11 +59,14 @@ const render = () => {
 }
 
 const animate = () => {
+	stats.begin();
 	then = now ? now : null;
 	now = new Date().getTime();
 	delta = then ? (now - then) / 16.666 : 1;
 
 	update(delta);
 	render();
+	stats.end();
+
 	raf = requestAnimationFrame(animate);
 }
