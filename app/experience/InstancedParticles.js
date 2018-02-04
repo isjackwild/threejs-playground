@@ -1,23 +1,33 @@
 const THREE = require('three');
 import GPGPU from '../lib/GPGPU';
+import _ from 'lodash';
 import { renderer } from './loop';
+import createTextMap from './CanvasTextMap.js';
+
+const LOREM = "non gravida tellus ullamcorper non. Cras vulputate vestibulum diam vel euismod. Morbi non nibh quam. Nunc mi justo, interdum sed egestas vitae, molestie vel ex. Pellentesque scelerisque sagittis tellus, eu tempor mi hendrerit in. Vivamus tincidunt cursus urna. Proin ut nisl eu magna dapibus suscipit ut sodales tortor. Praesent pharetra, metus a tincidunt varius, mauris diam efficitur augue, eget malesuada dolor purus non enim. Curabitur interdum lorem et nulla porta, eu hendrerit turpis dictum. Quisque vel euismod dolor, sit amet porttitor nisl. Donec eu auctor urna. Aenean vehicula dui vitae nibh iaculis facilisis. Sed eleifend nibh a turpis sagittis, vel auctor erat convallis. Pellentesque porttitor neque sit amet arcu bibendum tempus. Etiam consequat purus magna. Maecenas sollicitudin neque eget molestie volutpat. Ut at tellus arcu. Nam rhoncus tincidunt semper. Vivamus id lacinia est. Fusce feugiat ipsum nec aliquam fringilla. Integer in ornare sapien, nec dapibus libero. Nunc at eleifend tortor, sit amet porta erat. Pellentesque ornare, dolor vitae semper iaculis, erat enim dapibus est, in fermentum magna enim ac sem. Proin quis tempor justo. Sed sed tristique nunc. Mauris elementum nisi in volutpat ultrices. Duis vel nisl lectus. Sed congue eros ac blandit venenatis. In lacinia dui nisl, non porttitor purus suscipit et. Nam varius sem ut odio placerat mattis. Cras consectetur arcu at felis scelerisque tincidunt."
 
 const InstancedParticles = () => {
 	const gpgpu = new GPGPU(renderer);
 
 	// const SIZE = 32;
-	const INSTANCES = 10000;
+	const INSTANCES = 100;
 	const PARTICLE_SIZE = 5;
 	const positions = [];
 	const offsets = [];
-	const uvs = [];
+	const dataUvs = [];
+	let uvs = [];
 	const orientationsStart = [];
 	const orientationsEnd = [];
 	const startTime = Date.now();
 
-	positions.push( PARTICLE_SIZE, -PARTICLE_SIZE, 0 );
-	positions.push( -PARTICLE_SIZE, PARTICLE_SIZE, 0 );
-	positions.push( 0, 0, PARTICLE_SIZE );
+	// positions.push( PARTICLE_SIZE, -PARTICLE_SIZE, 0 );
+	// positions.push( -PARTICLE_SIZE, PARTICLE_SIZE, 0 );
+	// positions.push( 0, 0, PARTICLE_SIZE );
+	// positions.push( 0, 0, 0 );
+	positions.push( 10, 10, 0 );
+	positions.push( 10, -10, 0 );
+	positions.push( -10, -10, 0 );
+	positions.push( -10, 10, 0 );
 
 	const tmpV4 = new THREE.Vector4();
 	let mesh, geometry;
@@ -28,17 +38,29 @@ const InstancedParticles = () => {
 		const oX = (Math.random() - 0.5) * 10;
 		const oY = (Math.random() - 0.5) * 10;
 		const oZ = (Math.random() - 0.5) * 10;
-		offsets.push(oX, oY, oZ);
-		// offsets.push(0.0, 0.0, 0.0);
+		// offsets.push(oX, oY, oZ);
+		offsets.push(0.0, 0.0, 0.0);
 		tmpV4.set( Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1 ).normalize();
 		orientationsStart.push( tmpV4.x, tmpV4.y, tmpV4.z, tmpV4.w );
 
 		tmpV4.set( Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1 ).normalize();
 		orientationsEnd.push( tmpV4.x, tmpV4.y, tmpV4.z, tmpV4.w );
 
-		const u = i / INSTANCES;
-		const v = 0.0;
-		uvs.push(u, v);
+		const du = i / INSTANCES;
+		const dv = 0.0;
+		dataUvs.push(du, dv);
+
+		const u = i % Math.sqrt(INSTANCES) / (Math.sqrt(INSTANCES) - 1);
+		const v = ~~ (i / Math.sqrt(INSTANCES)) / (Math.sqrt(INSTANCES) - 1);
+		// uvs.push(u, v);
+
+		const tl = [0, 1];
+		const tr = [1, 1];
+		const bl = [0, 0];
+		const br = [1, 0];
+		uvs = uvs.concat([].concat(tl, tr, bl, br));
+
+		// const uvs = [0, 1, 1, 1, 0, 0, 1, 0];
 	}
 
 	const vertexSimulationShader = `
@@ -65,11 +87,12 @@ const InstancedParticles = () => {
 		uniform float uCorrection;
 
 		float NOISE_SCALE = 0.1;
-		float WIND_STRENGTH = 0.012;
+		float WIND_STRENGTH = 0.01;
 		float NOISE_SPEED = 0.09;
-		float MAX_VELOCITY = 0.01;
+		// float MAX_VELOCITY = 0.01;
+		float MAX_VELOCITY = 0.0;
 
-		vec3 GRAVITY = vec3(0.0, -0.01, 0.0);
+		vec3 GRAVITY = vec3(0.0, -0.1, 0.0);
 
 		void main() {
 			vec3 velocity = texture2D(tPositions, vec2(vUv.x, 1.0)).xyz;
@@ -130,6 +153,7 @@ const InstancedParticles = () => {
 		uniform mat4 projectionMatrix;
 
 		attribute vec2 uv;
+		attribute vec2 dataUv;
 		attribute vec3 position;
 		attribute vec3 offset;
 		attribute vec3 particlePosition;
@@ -138,6 +162,7 @@ const InstancedParticles = () => {
 
 		varying vec3 vPosition;
 		varying vec3 vColor;
+		varying vec2 vUv;
 
 		void main(){
 			vPosition = position;
@@ -145,25 +170,31 @@ const InstancedParticles = () => {
 			vec3 vcV = cross( orientation.xyz, vPosition );
 			vPosition = vcV * ( 2.0 * orientation.w ) + ( cross( orientation.xyz, vcV ) * 2.0 + vPosition );
 			
-			vec4 data = texture2D( tPositions, vec2(uv.x, 0.0));
+			vec4 data = texture2D( tPositions, vec2(dataUv.x, 0.0));
 			vec3 particlePosition = (data.xyz - 0.5) * 1000.0;
+			vUv = uv;
 
 			vColor = data.xyz;
 
-			gl_Position = projectionMatrix * modelViewMatrix * vec4(  vPosition + particlePosition + offset, 1.0 );
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(  position + particlePosition + offset, 1.0 );
 		}
 	`;
 
 	const fragmentShader = `
 		precision mediump float;
 
+		uniform sampler2D map;
+
 		varying vec3 vPosition;
 		varying vec3 vColor;
+		varying vec2 vUv;
 
 		float TIME_TRANSITION = 10000.0;
 
 		void main() {
-			gl_FragColor = vec4(vColor, 1.0);
+			vec3 color = texture2D(map, vUv).xyz;
+
+			gl_FragColor = vec4(color, 1.0);
 		}
 	`;
 
@@ -209,8 +240,6 @@ const InstancedParticles = () => {
 		const perlinTexture = new THREE.TextureLoader().load('/assets/textures/perlin-512.png');
 		perlinTexture.minFilter = perlinTexture.magFilter = THREE.NearestFilter;
 
-		console.log(perlinTexture);
-
 		return { renderTarget1, renderTarget2, originsTexture, perlinTexture };
 	};
 
@@ -233,22 +262,35 @@ const InstancedParticles = () => {
 	};
 
 	const createGeometry = () => {
+		const plane = new THREE.PlaneBufferGeometry(100, 100, 1, 1);
 		const geometry = new THREE.InstancedBufferGeometry();
 		geometry.maxInstancedCount = INSTANCES;
-
-		geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
-		geometry.addAttribute( 'uv', new THREE.InstancedBufferAttribute( new Float32Array( uvs ), 2 ) );
+		geometry.attributes.position = plane.attributes.position;
+		
+		geometry.index = plane.index;
+		geometry.attributes.uv = plane.attributes.uv;
+		
+		// console.log(geometry.attributes.position);
+		// geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+		// geometry.addAttribute( 'uv', new THREE.InstancedBufferAttribute( new Float32Array( uvs ), 2, 1 ) );
+		geometry.addAttribute( 'dataUv', new THREE.InstancedBufferAttribute( new Float32Array( dataUvs ), 2 ) );
 		geometry.addAttribute( 'offset', new THREE.InstancedBufferAttribute( new Float32Array( offsets ), 3 ) );
 		geometry.addAttribute( 'orientationStart', new THREE.InstancedBufferAttribute( new Float32Array( orientationsStart ), 4 ) );
 		geometry.addAttribute( 'orientationEnd', new THREE.InstancedBufferAttribute( new Float32Array( orientationsEnd ), 4 ) );
+
+		console.log(plane.attributes.uv);
+		console.log(geometry.attributes.uv);
+		console.log(geometry.attributes.dataUv);
 
 		return geometry;
 	};
 
 	const createMesh = (geometry, positionSimulationTexture) => {
+		console.log(createTextMap(LOREM));
 		const uniforms = {
 			color: { type: 'c', value: new THREE.Color(0x3db230) },
 			tPositions: { type: 't', value: positionSimulationTexture },
+			map: { type: 't', value: new THREE.TextureLoader().load('/assets/textures/grid.png') },
 		};
 
 		const material = new THREE.RawShaderMaterial({
@@ -292,14 +334,14 @@ const InstancedParticles = () => {
 
 	simulationMaterial = createSimulationMaterial(originsTexture, renderTarget1, perlinTexture);
 	geometry = createGeometry();
-	mesh = createMesh(geometry, renderTarget1);
+	mesh = createMesh(geometry, perlinTexture);
 
 	const debugMesh = new THREE.Mesh(
 		new THREE.PlaneGeometry( 512 * 2, 512 * 0.5 ),
 		new THREE.MeshBasicMaterial({ map: renderTarget1.texture, side: THREE.DoubleSide, transparent: true }),
 		// new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 	);
-	// mesh.add(debugMesh);
+	mesh.add(debugMesh);
 
 
 	return { mesh, update };
