@@ -6,7 +6,7 @@ const InstancedParticles = () => {
 	const gpgpu = new GPGPU(renderer);
 
 	// const SIZE = 32;
-	const INSTANCES = 10000;
+	const INSTANCES = 1000;
 	const PARTICLE_SIZE = 5;
 	const positions = [];
 	const offsets = [];
