@@ -7,14 +7,15 @@ const createMap = (letters) => {
 	const canvas = document.createElement('canvas');
 	const context = canvas.getContext('2d');
 
-	// document.body.appendChild(canvas);
+	document.body.appendChild(canvas);
 	canvas.style.width = '300px';
 	canvas.style.height = '300px';
 	canvas.style.top = '0';
 	canvas.style.left = '0';
 	canvas.style.position = 'absolute';
 	canvas.style.opacity = 1;
-	canvas.style.backgroundColor = 'transparent';
+	canvas.style.backgroundColor = 'orange';
+
 
 	const ceilSqRt = Math.ceil(Math.sqrt(letters.length));
 
@@ -35,8 +36,10 @@ const createMap = (letters) => {
 
 		const letter = letters.pop();
 
+		console.log('fillText');
+
 		context.fillText(letter, x, y);
-		// context.strokeRect(x - (LETTER_BOUNDING_BOX * 0.5), y - (LETTER_BOUNDING_BOX * 0.5), LETTER_BOUNDING_BOX, LETTER_BOUNDING_BOX);
+		context.fillRect(x - (LETTER_BOUNDING_BOX * 0.5), y - (LETTER_BOUNDING_BOX * 0.5), LETTER_BOUNDING_BOX, LETTER_BOUNDING_BOX);
 
 		i++;
 	}

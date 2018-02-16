@@ -15,7 +15,7 @@ export const init = () => {
 	const boxGeometry = new BoxGeometry( 50, 50, 50 );
 	const boxMaterial = new MeshBasicMaterial( { color: 0x0000ff } );
 	boxMesh = new Mesh( boxGeometry, boxMaterial );
-	// scene.add( boxMesh );
+	scene.add( boxMesh );
 
 	instancedParticles = InstancedParticles();
 	scene.add(instancedParticles.mesh);

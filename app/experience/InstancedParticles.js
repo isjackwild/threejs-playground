@@ -194,8 +194,8 @@ const InstancedParticles = () => {
 		void main() {
 			vec4 color = texture2D(map, (vUv * uUvScale) + (vUvOffsets * uUvScale));
 
-			gl_FragColor = vec4(color);
-			// gl_FragColor = vec4(vUv.x, 0.0, vUv.y, 1.0);
+			// gl_FragColor = vec4(color);
+			gl_FragColor = vec4(vUv.x, 0.0, vUv.y, 1.0);
 		}
 	`;
 
