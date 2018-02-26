@@ -1,31 +1,55 @@
-import { Scene, BoxGeometry, MeshBasicMaterial, Mesh } from 'three';
+// import { Scene, BoxGeometry, PlaneGeometry, MeshBasicMaterial, Mesh, AxisHelper, DoubleSide, VideoTexture } from 'three';
+import * as THREE from 'three';
 import { camera } from './camera.js';
 import { intersectableObjects } from './input-handler.js';
 import { lights } from './lighting.js';
-import InstancedParticles from './InstancedParticles';
+import Skybox from './Skybox';
+import Landscape from './Landscape';
 
-export let scene, boxMesh, instancedParticles;
+export let scene, boxMesh, skybox, screen;
 
 
 export const init = () => {
-	scene = new Scene();
+	scene = new THREE.Scene();
 	scene.add(camera);
 	lights.forEach( light => scene.add(light) );
 
-	const boxGeometry = new BoxGeometry( 50, 50, 50 );
-	const boxMaterial = new MeshBasicMaterial( { color: 0x0000ff } );
-	boxMesh = new Mesh( boxGeometry, boxMaterial );
-	scene.add( boxMesh );
+	skybox = Skybox();
+	scene.add(skybox.mesh);
 
-	instancedParticles = InstancedParticles();
-	scene.add(instancedParticles.mesh);
+	scene.add(new THREE.AxisHelper(1000));
+	const floor = new THREE.Mesh(
+		new THREE.PlaneGeometry(10000, 10000, 1),
+		new THREE.MeshBasicMaterial({ color: 0x333333, wireframe: true }),
+	);
+	floor.rotation.x = Math.PI * 0.5;
+	scene.add(floor);
 
-	const posFolder = window.gui.addFolder('position');
-	posFolder.add(instancedParticles.mesh.position, 'x', -5000, 5000);
-	posFolder.add(instancedParticles.mesh.position, 'y', -5000, 5000);
-	posFolder.add(instancedParticles.mesh.position, 'z', -5000, 5000);
+	scene.add(Landscape().mesh);
+
+	const video = document.createElement('video');
+	video.autoplay = true;
+	video.loop = true;
+	video.muted = true;
+	video.src = 'assets/video/tree.mp4';
+	video.onload = () => console.log('loaded');
+	const map = new THREE.VideoTexture(video);
+	map.minFilter = THREE.LinearFilter;
+	map.magFilter = THREE.LinearFilter;
+	map.format = THREE.RGBFormat;
+
+	screen = new THREE.Mesh(
+		new THREE.PlaneGeometry(16 * 150, 9 * 150, 1),
+		new THREE.MeshBasicMaterial({
+			color: 0xffffff,
+			side: THREE.DoubleSide,
+			map
+		}),
+	);
+	scene.add(screen);
+	screen.position.z = 2000;
+	screen.position.y = 9 * 150 * 0.5;
 };
 
 export const update = (delta) => {
-	instancedParticles.update(delta);
 };
