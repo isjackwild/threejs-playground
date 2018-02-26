@@ -1,4 +1,5 @@
 const THREE = require('three');
+import '../lib/StereoEffect';
 import { init as initScene, update as updateScene, scene } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';
@@ -8,7 +9,7 @@ import Stats from 'stats-js';
 let canvas;
 let raf, then, now, delta, stats;
 let currentCamera, currentScene;
-export let renderer;
+export let renderer, stereoFx;
 
 export const init = () => {
 	canvas = document.getElementsByClassName('canvas')[0];
@@ -40,9 +41,11 @@ const setupRenderer = () => {
 		canvas,
 		antialias: true,
 	});
-	renderer.setClearColor(0x000000);
+	renderer.setClearColor(0x333333);
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
+
+	stereoFx = new THREE.StereoEffect(renderer);
 }
 
 export const onResize = (w, h) => {
@@ -55,7 +58,11 @@ const update = (delta) => {
 }
 
 const render = () => {
-	renderer.render(currentScene, currentCamera);
+	if (window.location.search.indexOf('vr') > -1) {
+		stereoFx.render(currentScene, currentCamera);
+	} else {
+		renderer.render(currentScene, currentCamera);
+	}
 }
 
 const animate = () => {

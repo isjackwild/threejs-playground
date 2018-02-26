@@ -12,7 +12,7 @@ export const init = () => {
 		camera.position.y,
 		0,
 	);
-	// window.addEventListener('deviceorientation', setOrientationControls, true);
+	window.addEventListener('deviceorientation', setOrientationControls, true);
 }
 
 const setOrientationControls = (e) => {
