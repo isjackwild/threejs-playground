@@ -39,7 +39,7 @@ export const init = () => {
 	map.format = THREE.RGBFormat;
 
 	screen = new THREE.Mesh(
-		new THREE.PlaneGeometry(16 * 150, 9 * 150, 1),
+		new THREE.PlaneGeometry(16 * 100, 9 * 100, 1),
 		new THREE.MeshBasicMaterial({
 			color: 0xffffff,
 			side: THREE.DoubleSide,
@@ -48,7 +48,7 @@ export const init = () => {
 	);
 	scene.add(screen);
 	screen.position.z = 2000;
-	screen.position.y = 9 * 150 * 0.5;
+	screen.position.y = 9 * 100 * 0.5;
 };
 
 export const update = (delta) => {
