@@ -1,4 +1,4 @@
-const THREE = require('three');
+// const THREE = require('three');
 import { Noise } from 'noisejs';
 import { lerpRGBColour } from '../lib/colour';
 import Color from 'color';

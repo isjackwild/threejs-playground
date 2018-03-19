@@ -1,4 +1,4 @@
-const THREE = require('three');
+// const THREE = require('three');
 import '../lib/StereoEffect';
 import { init as initScene, update as updateScene, scene } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
