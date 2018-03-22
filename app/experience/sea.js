@@ -1,6 +1,6 @@
 const THREE = require('three');
 import _ from 'lodash';
-require('../../node_modules/three/examples/js/modifiers/BufferSubdivisionModifier.js');
+// require('../../node_modules/three/examples/js/modifiers/BufferSubdivisionModifier.js');
 import { FF_DIMENTIONS, FF_RESOLUTION, TOUCH_RADIUS } from './CONSTANTS.js';
 import { scene } from './scene.js';
 import { lookup as lookupFlowField } from './flow-field.js';
