@@ -1,4 +1,3 @@
-const THREE = require('three');
 import { init as initScene, update as updateScene, scene } from './scene.js';
 import { init as initCamera, camera } from './camera.js';
 import { init as initControls, update as updateControls, controls } from './controls.js';

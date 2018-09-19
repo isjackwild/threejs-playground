@@ -1,4 +1,3 @@
-const THREE = require('three');
 import { camera } from './camera.js';
 import { intersectableObjects } from './input-handler.js';
 import { lights } from './lighting.js';
